@@ -1,0 +1,5 @@
+menu - enter to bot menu
+help - read the user manual
+setcurrency - set your currency
+setlang - set your language
+wipeout - delete deals and items
