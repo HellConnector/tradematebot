@@ -3,7 +3,7 @@ name: Deploy
 on: workflow_dispatch
 
 jobs:
-  job_one:
+  deploy:
     runs-on: ubuntu-latest
     steps:
     - name: deploy to servevr
@@ -14,5 +14,21 @@ jobs:
         key: ${{ secrets.ID_RSA_GITHUB }}
         port: ${{ secrets.PORT }}
         script: |
-          cd ~/bot_utils
-          ./health_check.sh
+          cd ~/deploy/tradematebot
+          git pull origin main
+          screen -XS test quit
+          screen -dmS test bash -c \
+            "
+            . ./venv/bin/activate; \
+            export PYTHONPATH=$(pwd); \
+            export MODE=${{ secrets.MODE }}; \
+            export BOT_TOKEN=${{ secrets.BOT_TOKEN }}; \
+            export DATABASE_URL=${{ secrets.DATABASE_URL }}; \
+            export CHANNEL_ID=${{ secrets.CHANNEL_ID }}; \
+            export CURRENCY_API_KEY=${{ secrets.CURRENCY_API_KEY }}; \
+            pip install --upgrade pip; \
+            pip install -r requirements.txt; \
+            echo Starting TradeMateBot in 3 seconds; \
+            sleep(3); \
+            python3 bot/bot_runner.py;
+            "
