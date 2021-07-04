@@ -133,3 +133,6 @@ dmypy.json
 
 # VS Code folder
 .vscode/
+.pytest_cache/
+
+/bot/tokens.txt

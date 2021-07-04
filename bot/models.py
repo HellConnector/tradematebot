@@ -15,14 +15,14 @@ DEFAULT_ITEM_LIMIT = 96
 
 class Client(Base):
     """
-    Класс - отображение сущности пользователя в БД.
+    ORM-model for clients.
 
     Attributes:
-        name (str): Никнейм пользователя
-        chat_id (str): ID чата с телеграм-ботом
-        currency (str): Валюта
-        item_limit (int): Лимит предметов для отслеживания
-        lang (str): Язык пользователя
+        name (str): telegram username
+        chat_id (str): telegram chat_id
+        currency (str): client currency
+        item_limit (int): tracking item limit
+        lang (str): client language
     """
     __tablename__ = 'clients'
     id = Column(Integer, primary_key=True, autoincrement=True, index=True, unique=True)
@@ -49,19 +49,19 @@ class Client(Base):
 
 class Item(Base):
     """
-    Класс-отображение сущности предмета в БД.
+    ORM-model for items.
 
     Attributes:
-        client_id (int): ID пользователя из таблицы users
-        name (str): Полное имя предмета
-        app_id (int): ID игры в steam
-        app_name (str): Сокращённое название игры
-        count (int): Текущее количество в инвентаре
-        take_profit (float): Порог для уведомления по прибыли
-        stop_loss (float): Порог для уведомления по потерям
-        profit_notify (bool): Флаг отправки уведомления по прибыли
-        loss_notify (bool): Флаг отправки уведомления по потерям
-        updated (DateTime): Последняя дата обновления даддых по предметы (количества)
+        client_id (int): client id (foreign key)
+        name (str): item full name
+        app_id (int): steam store app id
+        app_name (str): steam store app name
+        count (int): current count in inventory
+        take_profit (float): take profit threshold for notification
+        stop_loss (float): stop loss threshold for notification
+        profit_notify (bool): take profit notification flag
+        loss_notify (bool): stop loss notification flag
+        updated (DateTime): last update date for item count
     """
     __tablename__ = 'items'
     id = Column(Integer, primary_key=True, autoincrement=True, unique=True)
@@ -97,17 +97,17 @@ class Item(Base):
 
 class Deal(Base):
     """
-    Класс-отображение сущности сделки в БД.
+    ORM-model for deal.
 
     Attributes:
-        client_id (int): ID пользователя из таблицы users
-        item_id (int): ID предмета из таблицы items
-        deal_type (str): Тип сделки (купля/продажа)
-        price (float): Цена сделки (за один предмет)
-        volume (int): Объём сделки (количество предметов с item_id)
-        deal_currency (str): Валюта сделки
-        date (DateTime): Дата совершения сделки (дата записи в БД)
-        closed (bool) : Флаг закрытия сделки
+        client_id (int): client id (foreign key)
+        item_id (int): item id (foreign key)
+        deal_type (str): deal type ('buy' or 'sell')
+        price (float): deal price
+        volume (int): deal volume (items count with item_id)
+        deal_currency (str): deal currency
+        date (DateTime): deal date (record to database date)
+        closed (bool): deal closed flag
     """
     __tablename__ = 'deals'
     id = Column(Integer, primary_key=True, autoincrement=True, unique=True)
@@ -170,20 +170,16 @@ class Skin(Base):
         self.sv = sv
 
     def get_names(self) -> List[str]:
-        """Метод, который возвращает все возможные варианты имени по качеству.
-
-        Создаётся словарь из пары значений качества и его доступности для скина.
-        Затем создаётся список форматированных имён, куда подставляется значение качества, если
-        скин может быть с этим качеством.
+        """A method that returns all possible variations of a name by quality.
 
         Returns:
-            List[str]: Список имён.
+            List[str]: list with item names.
         """
         q_cols = dict(zip(self.quality.keys(), [self.fn, self.mw, self.ft, self.ww, self.bs]))
         names = [
             f'{self.full_name} ({nm.WEAPON_QUALITY[k]})' for k in q_cols if q_cols[k] is True
         ]
-        if self.skin is None:  # Условие для ножей Vanilla(без качеств)
+        if self.skin is None:  # statement for Vanilla knives
             names.append(self.full_name)
         return names
 

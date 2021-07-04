@@ -9,14 +9,6 @@ import bot.db as db
 
 @pytest.fixture(scope='session', autouse=True)
 def log() -> logging.Logger:
-    """Сессионная фикстура для логирования.
-
-    Инициаллизирует логгер в начале тестовой сессии. Рассчитывает и выводит
-    время выполнения всей тестовой сессии.
-
-    Returns:
-        logging.Logger: Экземпляр логгера.
-    """
     log_s = logging.getLogger('LOG')
     return log_s
 
@@ -40,17 +32,4 @@ def dbs(db_engine) -> Session:
 
 
 def pytest_make_parametrize_id(config, val, argname) -> str:
-    """Хук для pytest.
-
-    Изменяет представление параметров, передаваемых через parametrize.
-    Нужен для корректного отображения кириллицы в консоли и в PyCharm.
-
-    Args:
-        argname (str): Имя параметра (аргумент)
-        config (_pytest.config.Config): Объект конфигурации pytest
-        val (str): Значение параметра.
-
-    Returns:
-        str: ID для теста.
-    """
     return f'{argname} -> {repr(val)}'

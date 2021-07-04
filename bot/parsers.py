@@ -8,16 +8,16 @@ import bot.names as nm
 
 
 def parse_weapon_text(text: str, s: Session) -> List[str]:
-    """Парсер запроса для оружия.
+    """Parser method for weapons.
 
-    Возвращает список с полными именами скина оружия для запросов на торговой площадке Steam.
+    Returns a list with the full names of the weapon skin for requests on the Steam market.
 
     Args:
-        text (str): Строка запроса, которая пришла от пользователя
-        s (Session): Объект сессии для работы с БД.
+        text (str): query from user.
+        s (Session): database session object.
 
     Returns:
-        List[str]: Список имён оружия, которые подходят для http-запроса в Steam-market.
+        List[str]: list with name for http-requests on Steam market.
     """
     names = []
     table = mdl.Skin

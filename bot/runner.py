@@ -190,11 +190,11 @@ def send_notifications(context: CallbackContext):
                                   f'`{d[3]} {d[0]}`' for i, d in enumerate(items_data))
             message = f"{messages.notify_take_profit_reached[client.lang]}{items_str}"
 
-            # Отправка сообщения
+            # Sending message
             context.bot.send_message(chat_id=chat_id, text=message,
                                      reply_markup=ReplyKeyboardRemove())
 
-            # снятие флага отправки уведомления с предметов
+            # Turning notification flag to False
             client_items = client.items.filter(Item.name.in_(x[1] for x in items_data)).all()
             for item in client_items:
                 item.profit_notify = False
@@ -212,7 +212,7 @@ def main():
     dp: Dispatcher = updater.dispatcher
     job: JobQueue = updater.job_queue
     job.run_repeating(send_notifications, interval=3600, first=dt.datetime(year=2021, day=1,
-                                                                           month=1, minute=45))
+                                                                           month=7, minute=45))
     job.run_daily(update_price_limits, time=dt.time(hour=3, minute=33))
 
     pattern_func = [
@@ -297,7 +297,6 @@ def main():
     dp.add_handler(conv_handler)
     dp.add_handler(MessageHandler(Filters.text, help_))
 
-    # Эти хэндлеры добавляем самыми последними
     dp.add_error_handler(error)
 
     updater.start_polling()

@@ -14,7 +14,7 @@ DEAL_TYPES = ('Buy', 'Sell')
 
 NOTIFY_TYPES = ('Take Profit', 'Stop Loss')
 
-# Ключи для словаря user_data
+# Keys for user_data dict
 REG_FLAG = 'reg_flag'
 ITEM_ID = 'item_id'
 ITEM_NAME = 'item_name'
@@ -23,12 +23,12 @@ CLIENT_CURRENCY = 'client_currency'
 DEAL_TYPE = 'deal_type'
 CLIENT_LANG = 'client_lang'
 ITEMS = 'items'
-# Ключи для уведомлений и пагинации
-ITEM_COUNT = 'items_count'  # количество предметов
-PAGE_NUM = 'page_num'  # текущая страница
-AVG_PRICE = 'avg_price'  # средняя цена покупки
-PAGE_COUNT = 'page_count'  # количество страниц
-PAGES = 'pages'  # Список списков с предметами (страницы)
+# Keys for notification and pagination
+ITEM_COUNT = 'items_count'  # Item count
+PAGE_NUM = 'page_num'  # Current page
+AVG_PRICE = 'avg_price'  # Average buy price
+PAGE_COUNT = 'page_count'  # Page count
+PAGES = 'pages'  # List of lists with items (pages)
 
 CURRENCY = ('USD', 'EUR', 'RUB', 'UAH')
 

@@ -17,8 +17,8 @@ from bot.models import Client, Deal, Item, Price, PriceLimit
 def get_item_function(pattern, pars_func) -> Callable[[Update, CallbackContext], int]:
     def inner(update: Update, context: CallbackContext) -> int:
         user = bu.get_tg_user(update)
-        text = re.match(pattern, update.message.text).group()  # Обрезаем по шаблону
-        text = re.sub(r'\s+', ' ', text.strip()).lower()  # Удаляем ненужные пробелы
+        text = re.match(pattern, update.message.text).group()
+        text = re.sub(r'\s+', ' ', text.strip()).lower()
         u_data = context.user_data
         deal_type = u_data[nm.DEAL_TYPE]
         u_data[nm.ITEMS] = {}
@@ -58,11 +58,11 @@ def selected_item(update: Update, context: CallbackContext):
     lang = bu.get_user_lang(user)
     u_data = context.user_data
     deal_type = u_data[nm.DEAL_TYPE]
-    text = re.match(bu.selected_item_pattern, update.message.text).group()  # Обрезаем по шаблону
+    text = re.match(bu.selected_item_pattern, update.message.text).group()
     try:
         item_name = u_data[nm.ITEMS][int(text)]
     except KeyError as e:
-        # Если хотя бы одна вещь была добавлена в user_data
+        # if at least one item was added in user_data
         if 1 in u_data[nm.ITEMS]:
             log.info(f'Key [{e}] not found in user_data')
             user.send_message(messages.select_item_error_message[lang])
@@ -76,8 +76,7 @@ def selected_item(update: Update, context: CallbackContext):
             item = s.query(Item).filter(
                 Item.name == u_data[nm.ITEM_NAME], Item.client_id == Client.id,
                 Client.chat_id == user.id).first()
-            # При попытке добавить сделку продажи с отсутствующим ещё предметом просим добавить
-            # сделку покупки.
+            # if user try to add 'sell'-deal without 'buy'-deal with current item
             if deal_type == 'sell':
                 if item is None:
                     kb = bu.get_inline_markup(('Buy',))
@@ -90,7 +89,7 @@ def selected_item(update: Update, context: CallbackContext):
                         Client.chat_id == user.id, Item.name == u_data[nm.ITEM_NAME],
                         Deal.closed.is_(False)).all()
                     currencies = [c for c, in temp_currencies]
-                    # Попытка добавить сделку продажи с валютой, которой на предмете нет
+                    # user try to add a 'sell'-deal with a currency that is not on the item
                     if u_data[nm.CLIENT_CURRENCY] not in currencies:
                         comma_currencies = ','.join(currencies)
                         or_currencies = ' or '.join(currencies) if lang == 'EN' else ' или '.join(
@@ -155,7 +154,7 @@ def item_count_price(update: Update, context: CallbackContext):
 
     with db.get_session() as s:
         client_id = s.query(Client.id).filter(Client.chat_id == user.id).first()[0]
-        # Проверяем, есть ли предмет с таким названием в таблице Items у этого клиента
+        # check if client already has that item
         item = s.query(Item).filter(
             Item.name == u_data[nm.ITEM_NAME], Item.client_id == Client.id,
             Client.chat_id == user.id).first()
@@ -185,7 +184,7 @@ def item_count_price(update: Update, context: CallbackContext):
                     deal_type=u_data[nm.DEAL_TYPE], volume=count, date=dt.datetime.now(),
                     deal_currency=u_data[nm.CLIENT_CURRENCY], closed=closed)
         s.add(deal)
-    # Если сделка закрывается, то закрываем все открытые сделки по этому предмету
+    # If the deal is closed, then we close all open deals on this item
     if closed:
         d_tbl: Table = Deal.__table__
         upd_stmt = update_stmt(d_tbl).where(d_tbl.c.item_id == item_id).where(
