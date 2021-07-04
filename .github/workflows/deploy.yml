@@ -28,4 +28,4 @@ jobs:
             pip install --upgrade pip; \
             pip install -r requirements.txt; \
             echo Starting TradeMateBot;"
-            # python3 bot/bot_runner.py;"
+            python3 bot/runner.py;"
