@@ -71,7 +71,8 @@ help_message = {
         "есть предложения по дальнейшему развитию бота - напишите @rflktr\n\n"
         "/menu - переход в меню из любой точки диалога\n"
         "/setcurrency - изменить валюту\n"
-        "/setlang - изменить язык\n\n"
+        "/setlang - изменить язык\n"
+        "/wipeout - удалить все свои сделки и предметы\n\n"
         "\U000026A0 Чтобы начать пользовать ботом, нужно подписаться на наш "
         "[новостной канал](https://t.me/tradematenews). Все новости по боту, "
         "а также уведомления о тех. работах будут именно там.",
@@ -80,7 +81,7 @@ help_message = {
         "still have unanswered questions or wish to contact us, message @rflktr\n\n"
         "/menu - returns you to main menu from any point\n"
         "/setcurrency - changes your currency\n"
-        "/setlang - changes your language\n\n"
+        "/setlang - changes your language\n"
         "/wipeout - deletes all deals and items\n\n"
         "\U000026A0 To start using bot you need to join our "
         "[news channel](https://t.me/tradematenews). "
