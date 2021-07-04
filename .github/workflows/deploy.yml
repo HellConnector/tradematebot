@@ -18,8 +18,7 @@ jobs:
           git pull origin main
           screen -XS test quit
           screen -dmS test bash -c \
-            "
-            . ./venv/bin/activate; \
+            ". ./venv/bin/activate; \
             export PYTHONPATH=$(pwd); \
             export MODE=${{ secrets.MODE }}; \
             export BOT_TOKEN=${{ secrets.BOT_TOKEN }}; \
@@ -30,5 +29,4 @@ jobs:
             pip install -r requirements.txt; \
             echo Starting TradeMateBot in 3 seconds; \
             sleep(3); \
-            python3 bot/bot_runner.py;
-            "
+            python3 bot/bot_runner.py;"
