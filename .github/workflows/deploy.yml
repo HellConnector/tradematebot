@@ -16,8 +16,8 @@ jobs:
         script: |
           cd ~/deploy/tradematebot
           git pull origin main
-          screen -XS test quit
-          screen -dmS test bash -c \
+          screen -XS tradematebot quit
+          screen -dmS tradematebot bash -c \
             ". ./venv/bin/activate; \
             export PYTHONPATH=$(pwd); \
             export MODE=${{ secrets.MODE }}; \
