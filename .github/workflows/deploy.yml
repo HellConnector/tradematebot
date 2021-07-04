@@ -6,7 +6,7 @@ jobs:
   job_one:
     runs-on: ubuntu-latest
     steps:
-    - name: cat prices log
+    - name: deploy to servevr
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.HOST }}
@@ -14,13 +14,5 @@ jobs:
         key: ${{ secrets.ID_RSA_GITHUB }}
         port: ${{ secrets.PORT }}
         script: |
-          echo ${{ secrets.PORT }}
-          cd /root/deploy/seka-investment-bot
-          python3 -m venv venv
-          . ./venv/bin/activate
-          pip install wheel
-          pip3 install -r requirements.txt
-          python3 example.py
-          
-          
-  
+          cd ~/bot_utils
+          ./health_check.sh
