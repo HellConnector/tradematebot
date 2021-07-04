@@ -19,7 +19,13 @@ jobs:
           screen -XS test quit
           screen -dmS test bash -c \
             ". ./venv/bin/activate; \
+            export PYTHONPATH=$(pwd); \
+            export MODE=${{ secrets.MODE }}; \
+            export BOT_TOKEN=${{ secrets.BOT_TOKEN }}; \
+            export DATABASE_URL=${{ secrets.DATABASE_URL }}; \
+            export CHANNEL_ID=${{ secrets.CHANNEL_ID }}; \
+            export CURRENCY_API_KEY=${{ secrets.CURRENCY_API_KEY }}; \
             pip install --upgrade pip; \
             pip install -r requirements.txt; \
-            echo Starting TradeMateBot; \
-            python3 example.py;"
+            echo Starting TradeMateBot;"
+            # python3 bot/bot_runner.py;"
