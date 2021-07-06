@@ -6,7 +6,7 @@ import telegram.bot
 from telegram import ParseMode, ReplyKeyboardRemove, Update
 from telegram.ext import (CallbackContext, CallbackQueryHandler,
                           CommandHandler, ConversationHandler, Dispatcher,
-                          Filters, JobQueue, MessageHandler, Updater)
+                          Filters, JobQueue, MessageHandler, Updater, PicklePersistence)
 from telegram.ext import messagequeue as mq
 from telegram.utils.request import Request
 
@@ -31,13 +31,14 @@ def start(update: Update, context: CallbackContext):
     username = user.first_name
     chat_id = user.id
     with db.get_session() as s:
-        # Проверяем, есть ли такой пользователь в базе
+        # Check if user already exists in database
         tmp = s.query(Client).filter(Client.chat_id == chat_id).first()
         if tmp is not None:
             tmp.name = username
             user.send_message(messages.welcome_back[tmp.lang])
         else:
-            context.user_data[nm.REG_FLAG] = True  # нужен для выбора языка и валюты при регистрации
+            # Need for choosing language and currency during registration
+            context.user_data[nm.REG_FLAG] = True
             s.add(Client(name=username, chat_id=chat_id))
             user.send_message("Hello! Choose your language by clicking button below."
                               "\n\nПривет! Выбери язык нажатием кнопки ниже.",
@@ -133,6 +134,7 @@ def wipeout_sure(update: Update, context: CallbackContext):
         del_items = "delete from items where client_id=:cid"
         s.execute(del_deals, {"cid": client.id})
         s.execute(del_items, {"cid": client.id})
+    log.info(f"WIPEOUT -> user [{user.id}] deleted all his deals and items")
     query.edit_message_text(messages.wipeout_sure[lang])
 
 
@@ -208,7 +210,8 @@ def main():
     q = mq.MessageQueue(all_burst_limit=30, all_time_limit_ms=1000)
     request = Request(con_pool_size=8)
     bot = MQBot(token=TOKEN, request=request, mqueue=q)
-    updater = Updater(bot=bot)
+    persistence = PicklePersistence(filename='persistence')
+    updater = Updater(bot=bot, persistence=persistence)
     dp: Dispatcher = updater.dispatcher
     job: JobQueue = updater.job_queue
     job.run_repeating(send_notifications, interval=3600, first=dt.datetime(year=2021, day=1,
@@ -240,6 +243,8 @@ def main():
     update_lang_handler = CallbackQueryHandler(update_lang, pattern=r'^(RU|EN)$')
 
     conv_handler = ConversationHandler(
+        persistent=True,
+        name='conv_handler',
         entry_points=[
             menu_handler
         ],

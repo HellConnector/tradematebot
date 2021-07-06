@@ -136,3 +136,6 @@ dmypy.json
 .pytest_cache/
 
 /bot/tokens.txt
+
+/bot/persistence
+/persistence

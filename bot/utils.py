@@ -65,7 +65,7 @@ def get_user_lang(user: User) -> str:
 
 
 def is_item_limit_reached(user: User, item_name: str, session: Session, lang: str) -> bool:
-    # TODO Переделать на использование client.items
+    # TODO Use client.items
     client_items = [r[0] for r in session.query(distinct(Item.name)).filter(
         Item.client_id == Client.id, Client.chat_id == user.id, Deal.item_id == Item.id,
         Deal.deal_type == 'buy', Deal.closed.is_(False)).all()]
