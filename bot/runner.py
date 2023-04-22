@@ -1,312 +1,410 @@
-import datetime as dt
 import gc
-import os
+from warnings import filterwarnings
 
-import telegram.bot
-from telegram import ParseMode, ReplyKeyboardRemove, Update
-from telegram.ext import (CallbackContext, CallbackQueryHandler,
-                          CommandHandler, ConversationHandler, Dispatcher,
-                          Filters, JobQueue, MessageHandler, Updater, PicklePersistence)
-from telegram.ext import messagequeue as mq
-from telegram.utils.request import Request
+from sqlalchemy import select, func, delete
+from sqlalchemy.ext.asyncio import AsyncSession
+from telegram import ReplyKeyboardRemove, Update, User
+from telegram.constants import ParseMode
+from telegram.ext import (
+    Application,
+    CallbackQueryHandler,
+    CommandHandler,
+    ConversationHandler,
+    JobQueue,
+    MessageHandler,
+    ContextTypes,
+    filters,
+    Defaults,
+)
+from telegram.warnings import PTBUserWarning
 
-import bot.db as db
-import bot.deals as deals_cb
-import bot.menu as menu_cb
-import bot.messages as messages
-import bot.names as nm
-import bot.notifications as notify_cb
-import bot.parsers as ps
-import bot.stats as stats_cb
-import bot.tracking as tracking_cb
-import bot.utils as bu
-from bot.logger import log
-from bot.models import Client, Item, Price
+import constants
+import deals
+import menu
+import messages
+import notifications
+import parsers
+import settings
+import stats
+import tracking
+import utils
+from db import Client, Deal, Item, get_async_session, Price
+from logger import log
 
-TOKEN = os.getenv('BOT_TOKEN')
+filterwarnings(
+    action="ignore", message=r".*CallbackQueryHandler", category=PTBUserWarning
+)
 
 
-def start(update: Update, context: CallbackContext):
-    user = bu.get_tg_user(update)
+@utils.inject_db_session_and_client
+async def start(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    user: User,
+    session: AsyncSession,
+    client: Client,
+):
     username = user.first_name
     chat_id = user.id
-    with db.get_session() as s:
-        # Check if user already exists in database
-        tmp = s.query(Client).filter(Client.chat_id == chat_id).first()
-        if tmp is not None:
-            tmp.name = username
-            user.send_message(messages.welcome_back[tmp.lang])
-        else:
-            # Need for choosing language and currency during registration
-            context.user_data[nm.REG_FLAG] = True
-            s.add(Client(name=username, chat_id=chat_id))
-            user.send_message("Hello! Choose your language by clicking button below."
-                              "\n\nПривет! Выбери язык нажатием кнопки ниже.",
-                              reply_markup=bu.get_inline_markup(nm.LANG))
+    # Check if user already exists in database
+    if client is not None:
+        client.name = username
+        await user.send_message(messages.welcome_back[client.lang])
+    else:
+        # Need to choose language and currency during registration
+        context.user_data[constants.REG_FLAG] = True
+        session.add(Client(name=username, chat_id=chat_id))
+        await user.send_message(
+            "Hello! Choose your language by clicking button below."
+            "\n\nПривет! Выбери язык нажатием кнопки ниже.",
+            reply_markup=utils.get_inline_markup(constants.LANG),
+        )
 
 
-def choose_lang(update: Update, context: CallbackContext):
-    user = bu.get_tg_user(update)
-    user.send_message("Choose your language by clicking button below."
-                      "\n\nВыбери язык нажатием кнопки ниже.",
-                      reply_markup=bu.get_inline_markup(nm.LANG))
+@utils.inject_db_session_and_client
+async def choose_currency(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    user: User,
+    session: AsyncSession,
+    client: Client,
+):
+    await user.send_message(
+        messages.currency_choose[client.lang],
+        reply_markup=utils.get_inline_markup(constants.CURRENCY),
+    )
 
 
-def choose_currency(update: Update, context: CallbackContext):
-    user = bu.get_tg_user(update)
-    lang = bu.get_user_lang(user)
-    user.send_message(messages.currency_choose[lang],
-                      reply_markup=bu.get_inline_markup(nm.CURRENCY))
+async def choose_lang(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = await utils.get_tg_user(update)
+    await user.send_message(
+        "Choose your language by clicking button below."
+        "\n\nВыбери язык нажатием кнопки ниже.",
+        reply_markup=utils.get_inline_markup(constants.LANG),
+    )
 
 
-def update_currency(update: Update, context: CallbackContext):
-    user = bu.get_tg_user(update)
+@utils.inject_db_session_and_client
+async def update_currency(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    user: User,
+    session: AsyncSession,
+    client: Client,
+):
     query = update.callback_query
     currency = query.data
-    with db.get_session() as s:
-        client = s.query(Client).filter(Client.chat_id == user.id).first()
-        lang = client.lang
-        reg_flag = context.user_data.pop(nm.REG_FLAG, None)
-        if reg_flag:
-            client.currency = currency
-            query.edit_message_text(messages.currency_update[lang].format(currency=currency))
-        else:
-            query.edit_message_text(messages.cannot_change_currency[lang])
+    reg_flag = context.user_data.pop(constants.REG_FLAG, None)
+    if reg_flag:
+        client.currency = currency
+        await query.edit_message_text(
+            messages.currency_update[client.lang].format(currency=currency)
+        )
+    else:
+        await query.edit_message_text(messages.cannot_change_currency[client.lang])
 
 
-def update_lang(update: Update, context: CallbackContext):
-    user = bu.get_tg_user(update)
+@utils.inject_db_session_and_client
+async def update_lang(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    user: User,
+    session: AsyncSession,
+    client: Client,
+):
     query = update.callback_query
-    with db.get_session() as s:
-        reg_flag = context.user_data.get(nm.REG_FLAG, None)
-        lang = query.data
-        client = s.query(Client).filter(Client.chat_id == user.id).first()
-        client.lang = lang
+    reg_flag = context.user_data.get(constants.REG_FLAG, None)
+    lang = query.data
+    client.lang = lang
     if reg_flag:
         text = messages.reg_message[lang]
-        query.edit_message_text(text, reply_markup=bu.get_inline_markup(nm.CURRENCY))
+        await query.edit_message_text(
+            text, reply_markup=utils.get_inline_markup(constants.CURRENCY)
+        )
     else:
-        query.edit_message_text(messages.lang_update[lang].format(lang=lang))
+        await query.edit_message_text(messages.lang_update[lang].format(lang=lang))
 
 
-def help_(update: Update, context: CallbackContext):
-    user = bu.get_tg_user(update)
-    lang = bu.get_user_lang(user)
-    user.send_message(messages.help_message[lang], disable_web_page_preview=True,
-                      reply_markup=ReplyKeyboardRemove())
+@utils.inject_db_session_and_client
+async def help_(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    user: User,
+    session: AsyncSession,
+    client: Client,
+):
+    await user.send_message(
+        messages.help_message[client.lang],
+        disable_web_page_preview=True,
+        reply_markup=ReplyKeyboardRemove(),
+    )
 
 
-def wipeout(update: Update, context: CallbackContext):
-    user = bu.get_tg_user(update)
-    lang = bu.get_user_lang(user)
-    with db.get_session() as s:
-        client = s.query(Client).filter(Client.chat_id == user.id).scalar()
-        if client.deals.count() == 0:
-            user.send_message(messages.wipeout_no_items[lang])
-        else:
-            user.send_message(messages.wipeout_message[lang],
-                              reply_markup=bu.get_inline_markup(buttons=("Yes", "No"), rows=1))
+@utils.inject_db_session_and_client
+async def wipeout(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    user: User,
+    session: AsyncSession,
+    client: Client,
+):
+    deals_count = await session.scalar(
+        select(func.count(Deal.id)).where(Deal.client_id == client.id)
+    )
+
+    if deals_count == 0:
+        await user.send_message(messages.wipeout_no_items[client.lang])
+    else:
+        await user.send_message(
+            messages.wipeout_message[client.lang],
+            reply_markup=utils.get_inline_markup(buttons=("Yes", "No"), rows=1),
+        )
 
 
-def wipeout_yes(update: Update, context: CallbackContext):
-    user = bu.get_tg_user(update)
-    lang = bu.get_user_lang(user)
+@utils.inject_db_session_and_client
+async def wipeout_yes(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    user: User,
+    session: AsyncSession,
+    client: Client,
+):
     query = update.callback_query
-    query.edit_message_text(messages.wipeout_yes[lang],
-                            reply_markup=bu.get_inline_markup(buttons=("Yes, i am sure", "NO"),
-                                                              rows=1))
+    await query.edit_message_text(
+        messages.wipeout_yes[client.lang],
+        reply_markup=utils.get_inline_markup(buttons=("Yes, i am sure", "NO"), rows=1),
+    )
 
 
-def wipeout_no(update: Update, context: CallbackContext):
-    user = bu.get_tg_user(update)
-    lang = bu.get_user_lang(user)
+@utils.inject_db_session_and_client
+async def wipeout_no(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    user: User,
+    session: AsyncSession,
+    client: Client,
+):
     query = update.callback_query
-    query.edit_message_text(messages.wipeout_no[lang])
+    await query.edit_message_text(messages.wipeout_no[client.lang])
 
 
-def wipeout_sure(update: Update, context: CallbackContext):
-    user = bu.get_tg_user(update)
-    lang = bu.get_user_lang(user)
+@utils.inject_db_session_and_client
+async def wipeout_sure(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    user: User,
+    session: AsyncSession,
+    client: Client,
+):
     query = update.callback_query
-    with db.get_session() as s:
-        client = s.query(Client).filter(Client.chat_id == user.id).first()
-        del_deals = "delete from deals where client_id=:cid"
-        del_items = "delete from items where client_id=:cid"
-        s.execute(del_deals, {"cid": client.id})
-        s.execute(del_items, {"cid": client.id})
+    await session.execute(delete(Deal).where(Deal.client_id == client.id))
+    await session.execute(delete(Item).where(Item.client_id == client.id))
     log.info(f"WIPEOUT -> user [{user.id}] deleted all his deals and items")
-    query.edit_message_text(messages.wipeout_sure[lang])
+    await query.edit_message_text(messages.wipeout_sure[client.lang])
 
 
-@bu.is_sub
-def main_menu(update: Update, context: CallbackContext):
-    user = bu.get_tg_user(update)
-    lang = bu.get_user_lang(user)
-    user.send_message(messages.menu_message[lang],
-                      reply_markup=bu.get_main_menu_inline_markup())
+@utils.inject_db_session_and_client
+@utils.is_sub
+async def main_menu(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    user: User,
+    session: AsyncSession,
+    client: Client,
+):
+    await user.send_message(
+        messages.menu_message[client.lang],
+        reply_markup=utils.get_main_menu_inline_markup(),
+    )
     context.user_data.clear()
     gc.collect()
 
-    return bu.MAIN_MENU
+    return utils.State.MAIN_MENU
 
 
-def error(update: Update, context: CallbackContext):
+async def error(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Log Errors caused by Updates."""
     log.warning(f'Update "{update}" caused error "{context.error}"')
 
 
-class MQBot(telegram.bot.Bot):
-
-    def __init__(self, *args, is_queued_def=True, mqueue=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        # below 2 attributes should be provided for decorator usage
-        self._is_messages_queued_default = is_queued_def
-        self._msg_queue = mqueue or mq.MessageQueue()
-
-    def __del__(self):
-        try:
-            self._msg_queue.stop()
-        except Exception:
-            pass
-
-    @mq.queuedmessage
-    def send_message(self, *args, **kwargs):
-        return super(MQBot, self).send_message(*args, parse_mode=ParseMode.MARKDOWN, **kwargs)
-
-    @mq.queuedmessage
-    def edit_message_text(self, *args, **kwargs):
-        return super(MQBot, self).edit_message_text(*args, parse_mode=ParseMode.MARKDOWN, **kwargs)
-
-
-def send_notifications(context: CallbackContext):
-    with db.get_session() as s:
-        take_profit_data = s.query(Client.chat_id, Client.currency, Item.name, Item.take_profit,
-                                   Price.price).filter(
-            Client.id == Item.client_id, Item.name == Price.name, Price.price > Item.take_profit,
-            Client.currency == Price.currency, Item.profit_notify.is_(True)
+async def send_notifications(context: ContextTypes.DEFAULT_TYPE):
+    async with get_async_session() as session:
+        take_profit_data = (
+            await session.execute(
+                select(
+                    Client.chat_id,
+                    Client.currency,
+                    Item.name,
+                    Item.take_profit,
+                    Price.price,
+                ).where(
+                    Client.id == Item.client_id,
+                    Item.name == Price.name,
+                    Price.price > Item.take_profit,
+                    Client.currency == Price.currency,
+                    Item.profit_notify.is_(True),
+                )
+            )
         ).all()
+
         for chat_id in set(j[0] for j in take_profit_data):
-            client = s.query(Client).filter(Client.chat_id == chat_id).scalar()
-            items_data = [i[1:] for i in filter(lambda x: x[0] == chat_id, take_profit_data)]
-            items_str = '\n'.join(f'{i + 1}) `{bu.get_short_name(d[1])}`:\n`{d[2]} {d[0]}` -> '
-                                  f'`{d[3]} {d[0]}`' for i, d in enumerate(items_data))
+            client = await session.scalar(
+                select(Client).where(Client.chat_id == chat_id)
+            )
+            items_data = [
+                i[1:] for i in filter(lambda x: x[0] == chat_id, take_profit_data)
+            ]
+            items_str = "\n".join(
+                f"{i + 1}) `{utils.get_short_name(d[1])}`:\n`{d[2]} {d[0]}` ⇒ "
+                f"`{round(d[3], 2)} {d[0]}`"
+                for i, d in enumerate(items_data)
+            )
             message = f"{messages.notify_take_profit_reached[client.lang]}{items_str}"
 
             # Sending message
-            context.bot.send_message(chat_id=chat_id, text=message,
-                                     reply_markup=ReplyKeyboardRemove())
+            await context.bot.send_message(
+                chat_id=chat_id, text=message, reply_markup=ReplyKeyboardRemove()
+            )
 
             # Turning notification flag to False
-            client_items = client.items.filter(Item.name.in_(x[1] for x in items_data)).all()
+            client_items = (
+                await session.scalars(
+                    client.items.select().where(Item.name.in_(x[1] for x in items_data))
+                )
+            ).all()
             for item in client_items:
                 item.profit_notify = False
 
 
-def update_price_limits(context: CallbackContext):
-    bu.update_price_limits()
+async def update_price_limits(context: ContextTypes.DEFAULT_TYPE):
+    limits = await utils.update_price_limits()
+    store_price_limits_in_bot_data(context, limits)
+
+
+def store_price_limits_in_bot_data(context: ContextTypes.DEFAULT_TYPE, limits):
+    context.bot_data.update(limits)
 
 
 def main():
-    q = mq.MessageQueue(all_burst_limit=30, all_time_limit_ms=1000)
-    request = Request(con_pool_size=8)
-    bot = MQBot(token=TOKEN, request=request, mqueue=q)
-    persistence = PicklePersistence(filename='persistence')
-    updater = Updater(bot=bot, persistence=persistence)
-    dp: Dispatcher = updater.dispatcher
-    job: JobQueue = updater.job_queue
-    job.run_repeating(send_notifications, interval=3600, first=dt.datetime(year=2021, day=1,
-                                                                           month=7, minute=45))
-    job.run_daily(update_price_limits, time=dt.time(hour=3, minute=33))
+    defaults = Defaults(parse_mode=ParseMode.MARKDOWN)
+
+    bot = (
+        Application.builder()
+        .token(settings.BOT_TOKEN)
+        .defaults(defaults=defaults)
+        .concurrent_updates(True)
+        .build()
+    )
+
+    job: JobQueue = bot.job_queue
+    # job.run_repeating(
+    #     send_notifications,
+    #     interval=3600,
+    #     first=dt.datetime(year=2023, day=1, month=1, minute=45),
+    # )
+
+    job.run_repeating(
+        send_notifications,
+        interval=60,
+    )
+
+    job.run_once(update_price_limits, 0)
+    # job.run_daily(update_price_limits, time=dt.time(hour=3, minute=33))
 
     pattern_func = [
-        (bu.w_pattern, ps.parse_weapon_text),
-        (bu.g_pattern, ps.parse_glove_text),
-        (bu.c_pattern, ps.parse_container_text),
-        (bu.k_pattern, ps.parse_knife_text),
-        (bu.a_pattern, ps.parse_agent_text),
-        (bu.s_pattern, ps.parse_sticker_text),
-        (bu.p_pattern, ps.parse_patch_text),
-        (bu.t_pattern, ps.parse_tool_text)
+        (utils.w_pattern, parsers.parse_weapon_text),
+        (utils.g_pattern, parsers.parse_glove_text),
+        (utils.c_pattern, parsers.parse_container_text),
+        (utils.k_pattern, parsers.parse_knife_text),
+        (utils.a_pattern, parsers.parse_agent_text),
+        (utils.s_pattern, parsers.parse_sticker_text),
+        (utils.p_pattern, parsers.parse_patch_text),
+        (utils.t_pattern, parsers.parse_tool_text),
     ]
 
     skin_handlers = (
-        MessageHandler(Filters.regex(p), deals_cb.get_item_function(p, f)) for p, f in pattern_func
+        MessageHandler(
+            filters.Regex(pattern), deals.get_item_function(pattern, function)
+        )
+        for pattern, function in pattern_func
     )
 
-    menu_handler = CommandHandler('menu', main_menu)
+    menu_handler = CommandHandler("menu", main_menu)
 
-    choose_currency_handler = CommandHandler('setcurrency', choose_currency)
-    update_currency_handler = CallbackQueryHandler(update_currency,
-                                                   pattern=rf'^({"|".join(nm.CURRENCY)})$')
+    choose_currency_handler = CommandHandler("setcurrency", choose_currency)
+    update_currency_handler = CallbackQueryHandler(
+        update_currency, pattern=rf'^({"|".join(constants.CURRENCY)})$'
+    )
 
-    choose_lang_handler = CommandHandler('setlang', choose_lang)
-    update_lang_handler = CallbackQueryHandler(update_lang, pattern=r'^(RU|EN)$')
+    choose_lang_handler = CommandHandler("setlang", choose_lang)
+    update_lang_handler = CallbackQueryHandler(update_lang, pattern=r"^(RU|EN)$")
 
     conv_handler = ConversationHandler(
-        persistent=True,
-        name='conv_handler',
-        entry_points=[
-            menu_handler
-        ],
+        name="conv_handler",
+        entry_points=[menu_handler],
         states={
-            bu.MAIN_MENU: [
-                CallbackQueryHandler(menu_cb.deals, pattern=r'^Deals$'),
-                CallbackQueryHandler(menu_cb.stats, pattern=r'^Stats$'),
-                CallbackQueryHandler(menu_cb.tracking, pattern=r'^Tracking$'),
-                CallbackQueryHandler(menu_cb.notifications, pattern=r'^Notifications$')
+            utils.State.MAIN_MENU: [
+                CallbackQueryHandler(menu.deals, pattern=r"^Deals$"),
+                CallbackQueryHandler(menu.stats, pattern=r"^Stats$"),
+                CallbackQueryHandler(menu.tracking, pattern=r"^Tracking$"),
+                CallbackQueryHandler(menu.notifications, pattern=r"^Notifications$"),
             ],
-
-            bu.DEALS: [
-                CallbackQueryHandler(deals_cb.set_deal_type, pattern=r'^(Buy|Sell)$')
+            utils.State.DEALS: [
+                CallbackQueryHandler(deals.set_deal_type, pattern=r"^(Buy|Sell)$")
             ],
-
-            bu.ITEMS: [
+            utils.State.ITEMS: [
                 *skin_handlers,
-                MessageHandler(Filters.regex(bu.selected_item_pattern), deals_cb.selected_item),
-                MessageHandler(Filters.regex(bu.cp_pattern), deals_cb.item_count_price),
-                MessageHandler(Filters.regex(r'(?!menu\b)\b\w+'), deals_cb.unknown_query)
+                MessageHandler(
+                    filters.Regex(utils.selected_item_pattern), deals.selected_item
+                ),
+                MessageHandler(filters.Regex(utils.cp_pattern), deals.item_count_price),
+                MessageHandler(filters.Regex(r"(?!menu\b)\b\w+"), deals.unknown_query),
             ],
-
-            bu.STATS: [
-                CallbackQueryHandler(stats_cb.get_items_stats, pattern=r'^(Newest|%|Value)$')
+            utils.State.STATS: [
+                CallbackQueryHandler(
+                    stats.get_items_stats, pattern=r"^(Newest|%|Value)$"
+                )
             ],
-
-            bu.TRACKING: [
-                CallbackQueryHandler(tracking_cb.get_tracking_table, pattern=r'^(%|Value)$')
+            utils.State.TRACKING: [
+                CallbackQueryHandler(
+                    tracking.get_tracking_table, pattern=r"^(%|Value)$"
+                )
             ],
-
-            bu.NOTIFICATIONS: [
-                CallbackQueryHandler(notify_cb.show_items_notify,
-                                     pattern=rf'^({"|".join(nm.NOTIFY_TYPES)})$'),
-                CallbackQueryHandler(notify_cb.change_page, pattern=r'^(<<<|>>>){1}$'),
-                CallbackQueryHandler(notify_cb.choose_item, pattern=r'^[0-7]{1}$'),
-                CallbackQueryHandler(notify_cb.cancel, pattern=r'Cancel'),
-                MessageHandler(Filters.regex(bu.notify_pattern), notify_cb.take_profit)
-            ]
+            utils.State.NOTIFICATIONS: [
+                CallbackQueryHandler(
+                    notifications.show_items,
+                    pattern=rf'^({"|".join(constants.NOTIFY_TYPES)})$',
+                ),
+                CallbackQueryHandler(
+                    notifications.change_page, pattern=r"^(<<<|>>>){1}$"
+                ),
+                CallbackQueryHandler(notifications.choose_item, pattern=r"^[0-7]{1}$"),
+                CallbackQueryHandler(notifications.cancel, pattern=r"Cancel"),
+                MessageHandler(
+                    filters.Regex(utils.notify_pattern), notifications.take_profit
+                ),
+            ],
         },
-        fallbacks=[
-            menu_handler
-        ]
+        fallbacks=[menu_handler],
     )
 
-    dp.add_handler(CommandHandler('start', start))
-    dp.add_handler(CommandHandler('help', help_))
-    dp.add_handler(CommandHandler('wipeout', wipeout))
-    dp.add_handler(CallbackQueryHandler(wipeout_yes, pattern=r'^Yes$'))
-    dp.add_handler(CallbackQueryHandler(wipeout_no, pattern=r'^(No|NO){1}$'))
-    dp.add_handler(CallbackQueryHandler(wipeout_sure, pattern=r'^Yes, i am sure$'))
-    dp.add_handler(choose_currency_handler)
-    dp.add_handler(choose_lang_handler)
-    dp.add_handler(update_currency_handler)
-    dp.add_handler(update_lang_handler)
-    dp.add_handler(conv_handler)
-    dp.add_handler(MessageHandler(Filters.text, help_))
+    bot.add_handler(CommandHandler("start", start))
+    bot.add_handler(CommandHandler("help", help_))
+    bot.add_handler(CommandHandler("wipeout", wipeout))
+    bot.add_handler(CallbackQueryHandler(wipeout_yes, pattern=r"^Yes$"))
+    bot.add_handler(CallbackQueryHandler(wipeout_no, pattern=r"^(No|NO){1}$"))
+    bot.add_handler(CallbackQueryHandler(wipeout_sure, pattern=r"^Yes, i am sure$"))
+    bot.add_handler(choose_currency_handler)
+    bot.add_handler(choose_lang_handler)
+    bot.add_handler(update_currency_handler)
+    bot.add_handler(update_lang_handler)
+    bot.add_handler(conv_handler)
+    bot.add_handler(MessageHandler(filters.TEXT, help_))
 
-    dp.add_error_handler(error)
+    bot.add_error_handler(error)
 
-    updater.start_polling()
-    updater.idle()
+    bot.run_polling()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

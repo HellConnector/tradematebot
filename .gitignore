@@ -2,6 +2,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
+requirements.txt
+dumps/
 
 # C extensions
 *.so
@@ -23,6 +25,7 @@ wheels/
 pip-wheel-metadata/
 share/python-wheels/
 *.egg-info/
+.ruff_cache
 .installed.cfg
 *.egg
 MANIFEST

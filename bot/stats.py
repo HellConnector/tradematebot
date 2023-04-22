@@ -1,31 +1,34 @@
 import gc
 
-from sqlalchemy import distinct
+from sqlalchemy import distinct, select
 from telegram import Update
-from telegram.ext import CallbackContext
+from telegram.ext import ContextTypes
 
-import bot.messages as messages
-import bot.picture_generator as pg
-import bot.utils as bu
-from bot.db import get_session
-from bot.models import Client, Deal
+import messages as messages
+import picture_generator as pg
+import utils
+from db import Client, Deal, get_async_session
 
 
-def get_items_stats(update: Update, context: CallbackContext):
-    user = bu.get_tg_user(update)
+async def get_items_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = await utils.get_tg_user(update)
     query = update.callback_query
-    with get_session() as s:
-        client = s.query(Client).filter(Client.chat_id == user.id).first()
+    async with get_async_session() as s:
+        client = await s.scalar(select(Client).where(Client.chat_id == user.id))
 
-        currency_list = s.query(distinct(Deal.deal_currency)).filter(
-            Deal.client_id == client.id, Deal.deal_type == 'sell').all()
+        currency_list = await s.scalars(
+            select(distinct(Deal.deal_currency)).filter(
+                Deal.client_id == client.id,
+                Deal.deal_type == "sell",
+            )
+        )
 
-        query.edit_message_text(messages.stats_generation_message[client.lang])
+        await query.edit_message_text(messages.stats_generation_message[client.lang])
 
         for currency in currency_list:
-            pictures = pg.get_stats_pic(client.id, *currency, query.data, s)
+            pictures = await pg.get_stats_pic(client.id, currency, query.data, s)
             for picture in pictures:
-                user.send_document(document=picture)
+                await user.send_document(document=picture)
 
     gc.collect()
-    return bu.MAIN_MENU
+    return utils.State.MAIN_MENU

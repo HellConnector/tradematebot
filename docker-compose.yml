@@ -1,0 +1,43 @@
+version: "3.8"
+
+services:
+
+  &db postgres:
+    image: postgres:15.2
+    environment:
+      POSTGRES_DB: &postgres_db tradematebot_db
+      POSTGRES_USER: &postgres_user postgres
+      POSTGRES_PASSWORD: &postgres_password postgres
+    ports:
+      - "5432:5432"
+
+  db-migration:
+    image: hellconnector/tradematebot:3.11-slim-buster
+    environment:
+      POSTGRES_HOST: *db
+      POSTGRES_USER: *postgres_user
+      POSTGRES_PASSWORD: *postgres_password
+      POSTGRES_DB: *postgres_db
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        cd db
+        alembic upgrade head
+    depends_on:
+      - postgres
+
+  bot:
+    image: hellconnector/tradematebot:3.11-slim-buster
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_HOST: *db
+      POSTGRES_USER: *postgres_user
+      POSTGRES_PASSWORD: *postgres_password
+      POSTGRES_DB: *postgres_db
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - db-migration

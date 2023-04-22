@@ -1,31 +1,32 @@
 from typing import List
 
-from sqlalchemy import and_, func
-from sqlalchemy.orm import Session
+from sqlalchemy import and_, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-import bot.models as mdl
-import bot.names as nm
+import db
+import constants
 
 
-def parse_weapon_text(text: str, s: Session) -> List[str]:
+async def parse_weapon_text(text: str, s: AsyncSession) -> List[str]:
     """Parser method for weapons.
 
-    Returns a list with the full names of the weapon skin for requests on the Steam market.
+    Returns a list with the full names of the weapon skin
+    for requests on the Steam market.
 
     Args:
         text (str): query from user.
-        s (Session): database session object.
+        s (AsyncSession): database session object.
 
     Returns:
         List[str]: list with name for http-requests on Steam market.
     """
     names = []
-    table = mdl.Skin
+    table = db.Skin
     words = text.split()
-    q_idx = [words.index(i) for i in nm.WEAPON_QUALITY if i in words][0]
-    short_q, quality = words[q_idx], nm.WEAPON_QUALITY[words[q_idx]]
-    st = 'st' in words[q_idx:]
-    sv = 'sv' in words[q_idx:]
+    q_idx = [words.index(i) for i in constants.WEAPON_QUALITY if i in words][0]
+    short_q, quality = words[q_idx], constants.WEAPON_QUALITY[words[q_idx]]
+    st = "st" in words[q_idx:]
+    sv = "sv" in words[q_idx:]
     name_keys = words[1:q_idx]
     t = None
     q = table.quality[short_q]
@@ -35,121 +36,184 @@ def parse_weapon_text(text: str, s: Session) -> List[str]:
         t = table.sv
 
     if t:
-        skins = s.query(table).filter(q.is_(True), t.is_(True), table.skin_type == 'gun', and_(
-            func.lower(table.full_name).contains(n) for n in name_keys)).all()
+        skins = await s.scalars(
+            select(table.full_name).filter(
+                q.is_(True),
+                t.is_(True),
+                table.skin_type == "gun",
+                and_(func.lower(table.full_name).contains(n) for n in name_keys),
+            )
+        )
     else:
-        skins = s.query(table).filter(q.is_(True), table.skin_type == 'gun', and_(
-            func.lower(table.full_name).contains(n) for n in name_keys)).all()
+        skins = await s.scalars(
+            select(table.full_name).filter(
+                q.is_(True),
+                table.skin_type == "gun",
+                and_(func.lower(table.full_name).contains(n) for n in name_keys),
+            )
+        )
     for skin in skins:
         if st:
-            name = f'{nm.ST} {skin.full_name} ({quality})'
+            name = f"{constants.ST} {skin} ({quality})"
         elif sv:
-            name = f'{nm.SV} {skin.full_name} ({quality})'
+            name = f"{constants.SV} {skin} ({quality})"
         else:
-            name = f'{skin.full_name} ({quality})'
+            name = f"{skin} ({quality})"
         names.append(name)
     return names
 
 
-def parse_glove_text(text: str, s: Session) -> List[str]:
-    names = []
-    table = mdl.Skin
+async def parse_glove_text(text: str, s: AsyncSession) -> List[str]:
+    table = db.Skin
     words = text.split()
-    q_idx = [words.index(i) for i in nm.WEAPON_QUALITY if i in words][0]
-    short_q, quality = words[q_idx], nm.WEAPON_QUALITY[words[q_idx]]
+    q_idx = [words.index(i) for i in constants.WEAPON_QUALITY if i in words][0]
+    short_q, quality = words[q_idx], constants.WEAPON_QUALITY[words[q_idx]]
     name_keys = words[1:q_idx]
     q = table.quality[short_q]
 
-    skins = s.query(table).filter(q.is_(True), table.skin_type == 'glove', and_(
-        func.lower(table.full_name).contains(n) for n in name_keys)).all()
-    for skin in skins:
-        name = f'{nm.STAR} {skin.full_name} ({quality})'
-        names.append(name)
-    return names
+    skins = await s.scalars(
+        select(table.full_name).filter(
+            q.is_(True),
+            table.skin_type == "glove",
+            and_(func.lower(table.full_name).contains(n) for n in name_keys),
+        )
+    )
+    return [f"{constants.STAR} {skin} ({quality})" for skin in skins]
 
 
-def parse_container_text(text: str, s: Session) -> List[str]:
-    names = []
-    table = mdl.Container
+async def parse_container_text(text: str, s: AsyncSession) -> List[str]:
+    table = db.Container
     words = text.split()
     name_keys = words[1:]
-    containers = s.query(table).filter(and_(
-        func.lower(table.name).contains(n) for n in name_keys)).all()
-    if containers:
-        for container in containers:
-            names.append(container.name)
-    return names
+    return list(
+        map(
+            lambda name: str(name),
+            (
+                await s.scalars(
+                    select(table.name).filter(
+                        and_(func.lower(table.name).contains(n) for n in name_keys)
+                    )
+                )
+            ).all(),
+        )
+    )
 
 
-def parse_agent_text(text: str, s: Session) -> List[str]:
-    names = []
-    table = mdl.Agent
+async def parse_agent_text(text: str, s: AsyncSession) -> List[str]:
+    model = db.Agent
     words = text.split()
-    side = words[1] if words[1] in ['t', 'ct'] else None
+    side = words[1] if words[1] in ["t", "ct"] else None
     name_keys = words[2:] if side else words[1:]
-    if side:
-        agents = s.query(table).filter(table.side == side, and_(
-            func.lower(table.name).contains(n) for n in name_keys)).all()
-    else:
-        agents = s.query(table).filter(and_(
-            func.lower(table.name).contains(n) for n in name_keys)).all()
-    for agent in agents:
-        names.append(agent.name)
-    return names
+    if side and name_keys:
+        return list(
+            map(
+                lambda name: str(name),
+                (
+                    await s.scalars(
+                        select(model.name).filter(
+                            model.side == side,
+                            and_(func.lower(model.name).contains(n) for n in name_keys),
+                        )
+                    )
+                ).all(),
+            )
+        )
+    if side and not name_keys:
+        return list(
+            map(
+                lambda name: str(name),
+                (
+                    await s.scalars(
+                        select(model.name).filter(
+                            model.side == side,
+                        )
+                    )
+                ).all(),
+            )
+        )
+    if not side and name_keys:
+        return list(
+            map(
+                lambda name: str(name),
+                (
+                    await s.scalars(
+                        select(model.name).filter(
+                            and_(func.lower(model.name).contains(n) for n in name_keys),
+                        )
+                    )
+                ).all(),
+            )
+        )
 
 
-def parse_tool_text(text: str, s: Session) -> List[str]:
-    names = []
-    table = mdl.Tool
+async def parse_tool_text(text: str, s: AsyncSession) -> List[str]:
+    table = db.Tool
     words = text.split()
     name_keys = words[1:]
-    tools = s.query(table).filter(and_(
-        func.lower(table.name).contains(n) for n in name_keys)).all()
-    if tools:
-        for tool in tools:
-            names.append(tool.name)
-    return names
+    return list(
+        map(
+            lambda name: str(name),
+            (
+                await s.scalars(
+                    select(table.name).filter(
+                        and_(func.lower(table.name).contains(n) for n in name_keys)
+                    )
+                )
+            ).all(),
+        )
+    )
 
 
-def parse_sticker_text(text: str, s: Session) -> List[str]:
-    names = []
-    table = mdl.Sticker
+async def parse_sticker_text(text: str, s: AsyncSession) -> List[str]:
+    table = db.Sticker
     words = text.split()
-    stickers = s.query(table).filter(table.sticker_type.in_(("tournament", "regular")), and_(
-        func.lower(table.full_name).contains(n) for n in words[1:])).all()
-    for sticker in stickers:
-        names.append(f'Sticker | {sticker.full_name}')
-    return names
+    stickers = await s.scalars(
+        select(table.full_name).filter(
+            table.sticker_type.in_(("tournament", "regular")),
+            and_(func.lower(table.full_name).contains(n) for n in words[1:]),
+        )
+    )
+    return [f"Sticker | {sticker}" for sticker in stickers]
 
 
-def parse_patch_text(text: str, s: Session) -> List[str]:
-    names = []
-    table = mdl.Sticker
+async def parse_patch_text(text: str, s: AsyncSession) -> List[str]:
+    table = db.Sticker
     words = text.split()
     name_keys = words[1:]
-    patches = s.query(table).filter(table.sticker_type == 'patch', and_(
-        func.lower(table.full_name).contains(n) for n in name_keys)).all()
-    if patches:
-        for patch in patches:
-            names.append(patch.full_name)
-    return names
+    return list(
+        map(
+            lambda name: str(name),
+            (
+                await s.scalars(
+                    select(table.full_name).filter(
+                        table.sticker_type == "patch",
+                        and_(
+                            func.lower(table.full_name).contains(n) for n in name_keys
+                        ),
+                    )
+                )
+            ).all(),
+        )
+    )
 
 
-def parse_knife_text(text: str, s: Session) -> List[str]:
-    table = mdl.Skin
+async def parse_knife_text(text: str, s: AsyncSession) -> List[str]:
+    is_q = False
+    q, t = None, None
+    table = db.Skin
     names = []
     words = text.split()
-    q_idx = [i for i, j in enumerate(words) if j in nm.WEAPON_QUALITY]
+    q_idx = [i for i, j in enumerate(words) if j in constants.WEAPON_QUALITY]
     if len(q_idx) > 0:
         q_idx = q_idx[0]
-        short_q, quality = words[q_idx], nm.WEAPON_QUALITY[words[q_idx]]
-        st = 'st' in words[q_idx:]
+        short_q, quality = words[q_idx], constants.WEAPON_QUALITY[words[q_idx]]
+        st = "st" in words[q_idx:]
         t = table.st if st else None
         name_keys = words[1:q_idx]
     else:
-        st = 'st' in words[1:]
+        st = "st" in words[1:]
         if st:
-            name_keys = words[1:words.index('st')]
+            name_keys = words[1 : words.index("st")]
             t = table.st
         else:
             name_keys = words[1:]
@@ -160,29 +224,63 @@ def parse_knife_text(text: str, s: Session) -> List[str]:
         is_q = True
 
     if st and is_q:
-        skins = s.query(table).filter(q.is_(True), t.is_(True), table.skin_type == 'knife', and_(
-            func.lower(table.full_name).contains(n) for n in name_keys)).all()
+        skins = await s.scalars(
+            select(table).filter(
+                q.is_(True),
+                t.is_(True),
+                table.skin_type == "knife",
+                and_(func.lower(table.full_name).contains(n) for n in name_keys),
+            )
+        )
     elif not st and is_q:
-        skins = s.query(table).filter(q.is_(True), table.skin_type == 'knife', and_(
-            func.lower(table.full_name).contains(n) for n in name_keys)).all()
+        skins = await s.scalars(
+            select(table).filter(
+                q.is_(True),
+                table.skin_type == "knife",
+                and_(func.lower(table.full_name).contains(n) for n in name_keys),
+            )
+        )
     elif st and not is_q:
-        skins = s.query(table).filter(
-            t.is_(True), table.skin_type == 'knife', table.skin.is_(None),
-            and_(func.lower(table.full_name).contains(n) for n in name_keys)).all()
+        skins = await s.scalars(
+            select(table).filter(
+                t.is_(True),
+                table.skin_type == "knife",
+                table.skin.is_(None),
+                and_(func.lower(table.full_name).contains(n) for n in name_keys),
+            )
+        )
     else:
-        skins = s.query(table).filter(table.skin_type == 'knife', table.skin.is_(None), and_(
-            func.lower(table.full_name).contains(n) for n in name_keys)).all()
+        skins = (
+            await s.scalars(
+                select(table).filter(
+                    table.skin_type == "knife",
+                    table.skin.is_(None),
+                    and_(func.lower(table.full_name).contains(n) for n in name_keys),
+                )
+            )
+        ).all()
 
     for skin in skins:
         name = None
         if st and is_q:
-            name = f'{nm.STAR} {nm.ST} {skin.full_name} ({quality})'
+            name = f"{constants.STAR} {constants.ST} {skin.full_name} ({quality})"
         elif not st and is_q:
-            name = f'{nm.STAR} {skin.full_name} ({quality})'
+            name = f"{constants.STAR} {skin.full_name} ({quality})"
         elif st and not is_q:
-            names.extend(list(map(lambda x: f'{nm.STAR} {nm.ST} {x}', skin.get_names())))
+            names.extend(
+                list(
+                    map(
+                        lambda x: f"{constants.STAR} {constants.ST} {x}",
+                        skin.get_names(),
+                    )
+                )
+            )
         elif not st and not is_q:
-            names.extend(list(map(lambda x: f'{nm.STAR} {x}', skin.get_names())))
+            names.extend(list(map(lambda x: f"{constants.STAR} {x}", skin.get_names())))
         if name:
             names.append(name)
     return names
+
+
+if __name__ == "__main__":
+    print(db.DB_ADDR)
