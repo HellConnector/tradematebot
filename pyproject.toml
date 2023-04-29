@@ -26,6 +26,11 @@ ruff = "^0.0.262"
 black = "^23.3.0"
 memray = "^1.7.0"
 
+
+[tool.poetry.group.parser.dependencies]
+vdf = "^3.4"
+aiohttp = "^3.8.4"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
