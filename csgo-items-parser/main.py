@@ -1,8 +1,18 @@
 import asyncio
+import itertools
+import logging
 import re
+from typing import Any
 
 import aiohttp
 import vdf
+from sqlalchemy import select
+
+from bot.db import get_async_session, Skin, Container, Sticker, Tool, Agent
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.addHandler(logging.StreamHandler())
 
 NON_STATTRAK_COLLECTIONS = (
     "set_dust",
@@ -77,18 +87,32 @@ async def get_texts():
     return results
 
 
-def get_stickers(tokens: dict) -> set[str]:
-    backslash = "\\"
+def get_stickers(tokens: dict, sticker_kits: dict) -> set[str]:
     generator = (
         value
         for key, value in tokens.items()
         if re.search(r"StickerKit_(?!.*desc|Default|dh|dz)", key)
+        and not re.search(
+            r"(2014|2015|2016|2017|2018|2019)_team(_[a-z0-9_]+_)+gold", key
+        )
+        and not re.search(r"kat2014_(?!esl1|esl2)([_[a-z0-9]+)_+foil", key)
+        and not re.search(r"roles_(?!pro)([a-z]+)_*foil", key)
+        and key in sticker_kits
     )
     return set(
         (
-            f"Sticker | {re.sub(rf'^StickerKit(_{backslash}w+{backslash}s+)', '', line)}"
+            f"Sticker | {line}"
             for line in generator
-            if "(Gold) | Cluj-Napoca 2015" not in line
+            if "(Foil) | Cologne 2014" not in line
+            and "Cologne 2014 (Gold)" not in line
+            and "(Gold) | Katowice 2015" not in line
+            and "(Gold) | Cologne 2015" not in line
+            and "(Gold) | Cluj-Napoca 2015" not in line
+            and "(Gold) | MLG Columbus 2016" not in line
+            and "(Gold)  | MLG Columbus 2016" not in line  # double space (WTF)
+            and "(Gold) | Cologne 2016" not in line
+            and "(Gold) | Atlanta 2017" not in line
+            and "All-Stars" not in line
         )
     )
 
@@ -108,7 +132,7 @@ def get_cases(tokens: dict) -> set[str]:
     )
     return set(
         (
-            re.sub(r"^CSGO_crate(_\w+\s+)", "", line).replace("Holo/Foil", "Holo-Foil")
+            line.replace("Holo/Foil", "Holo-Foil")
             for line in generator
             if "Case Key" not in line
         )
@@ -116,7 +140,7 @@ def get_cases(tokens: dict) -> set[str]:
 
 
 def get_keys(tokens: dict) -> set[str]:
-    generator = (
+    return set(
         value
         for key, value in tokens.items()
         if re.search(
@@ -127,22 +151,42 @@ def get_keys(tokens: dict) -> set[str]:
             f"{key}{value}",
         )
     )
-    return set(re.sub(r"^CSGO(_\w+\s+)", "", line) for line in generator)
 
 
-def get_agents(tokens: dict) -> set[str]:
+def get_agents(tokens: dict) -> dict[str, set]:
+    agents = {}
+    agents["t"] = set()
+    agents["ct"] = set()
     generator = (
-        value
+        (key.lower(), value)
         for key, value in tokens.items()
         if re.search(
             r"(CSGO_CustomPlayer|CSGO_Customplayer)(?!.*(_Desc|_t_|_ct_))", key
         )
     )
+    for key, value in generator:
+        if key.startswith("csgo_customplayer_t"):
+            agents["t"].add(value)
+        else:
+            agents["ct"].add(value)
+    return agents
+
+
+def get_viewer_passes(tokens: dict) -> set[str]:
     return set(
-        (
-            re.sub(r"(CSGO_CustomPlayer|CSGO_Customplayer)_(\w+\s+)", "", line)
-            for line in generator
+        value
+        for key, value in tokens.items()
+        if re.search(
+            r"(CSGO_TournamentPass)(?!.*(_Desc|_desc|_title|_tinyname|_charge))", key
         )
+    )
+
+
+def get_operation_passes(tokens: dict) -> set[str]:
+    return set(
+        value
+        for key, value in tokens.items()
+        if re.search(r"(CSGO_Ticket)(?!.*(_Desc))", key)
     )
 
 
@@ -154,7 +198,9 @@ def get_patches(sticker_kits: dict, tokens: dict) -> set[str]:
     )
 
 
-def get_skins(items_game: dict, tokens: dict, items_game_cdn: set[str]) -> set[str]:
+def get_skins(
+    items_game: dict, tokens: dict, items_game_cdn: set[str]
+) -> tuple[dict[str, dict[str, Any]], set[str]]:
     items = [
         value
         for value in items_game["items"].values()
@@ -178,7 +224,6 @@ def get_skins(items_game: dict, tokens: dict, items_game_cdn: set[str]) -> set[s
             "weapon_spanner",
         )
         and "grenade" not in name
-        # and value.get("item_name") is not None
     ]
     paintkits: dict = {
         value["name"]: value for value in items_game["paint_kits"].values()
@@ -189,6 +234,7 @@ def get_skins(items_game: dict, tokens: dict, items_game_cdn: set[str]) -> set[s
     # Needs if wear_remap_min/max don't exist in paint kit
     default_paint_kit = paintkits.get("default")
     all_skins = set()
+    all_skins_dict = {}
 
     def get_market_name(item: dict, prefab: dict) -> str:
         if item_name := item.get("item_name"):
@@ -291,16 +337,22 @@ def get_skins(items_game: dict, tokens: dict, items_game_cdn: set[str]) -> set[s
 
             if (
                 item_lootlist
-                and list(item_lootlist.keys())[0] in NON_STATTRAK_COLLECTIONS
-            ):
-                is_stattrak = False
-
-            if (
-                item_lootlist
                 and list(item_lootlist.keys())[0] in SOUVENIR_COLLECTIONS
                 # # R8 Bone Mask has Souvenir (WTF!?) and MP5-SD Lab Rat
             ) or skin_key in ("weapon_revolver_sp_tape", "weapon_mp5sd_hy_labrat_mp5"):
                 is_souvenir = True
+
+            if (
+                item_lootlist
+                and not is_souvenir
+                and any(
+                    map(
+                        lambda s: list(item_lootlist.keys())[0].startswith(s),
+                        NON_STATTRAK_COLLECTIONS,
+                    )
+                )
+            ):
+                is_stattrak = False
 
             market_name = get_market_name(item, prefab)
             paintkit_name = (
@@ -331,9 +383,176 @@ def get_skins(items_game: dict, tokens: dict, items_game_cdn: set[str]) -> set[s
                 all_skins.add(f"★ {market_name}")
                 all_skins.add(f"★ StatTrak™ {market_name}")
 
-                pass
+            full_name = (
+                f"{market_name} | {paintkit_name}"
+                if not is_default and paintkit_name is not None
+                else market_name
+            )
+            all_skins_dict[full_name] = {}
+            all_skins_dict[full_name]["skin_type"] = (
+                "glove" if is_glove else "knife" if is_knife else "gun"
+            )
+            all_skins_dict[full_name][
+                "collection"
+            ] = None  # Unused field in database model TODO create migration to remove
+            all_skins_dict[full_name]["name"] = market_name
+            all_skins_dict[full_name]["skin"] = paintkit_name
+            all_skins_dict[full_name]["full_name"] = full_name
+            all_skins_dict[full_name]["fn"] = (
+                False if is_default and is_knife else "Factory New" in qualities
+            )
+            all_skins_dict[full_name]["mw"] = (
+                False if is_default and is_knife else "Minimal Wear" in qualities
+            )
+            all_skins_dict[full_name]["ft"] = (
+                False if is_default and is_knife else "Field-Tested" in qualities
+            )
+            all_skins_dict[full_name]["ww"] = (
+                False if is_default and is_knife else "Well-Worn" in qualities
+            )
+            all_skins_dict[full_name]["bs"] = (
+                False if is_default and is_knife else "Battle-Scarred" in qualities
+            )
+            all_skins_dict[full_name]["st"] = (
+                True if is_stattrak and not is_souvenir else False
+            )
+            all_skins_dict[full_name]["sv"] = is_souvenir
 
-    return all_skins
+    return all_skins_dict, all_skins
+
+
+async def add_skins_to_database(skins: dict[str, dict]):
+    added_count = 0
+    async with get_async_session() as session:
+        current_db_skins = set((await session.scalars(select(Skin.full_name))).all())
+        for skin in skins:
+            if skin not in current_db_skins:
+                session.add(Skin.from_dict(skins[skin]))
+                logger.info(f"Added [{skin}] to [skins] table")
+                added_count += 1
+
+    logger.info(f"Added [{added_count}] rows to [skins] table")
+
+
+async def add_containers_to_database(containers: set[str]):
+    added_count = 0
+    async with get_async_session() as session:
+        current_db_containers = set(
+            (await session.scalars(select(Container.name))).all()
+        )
+        for container in containers:
+            if container not in current_db_containers:
+                session.add(Container("from_parser", container))
+                logger.info(f"Added [{container}] to [containers] table")
+                added_count += 1
+
+    logger.info(f"Added [{added_count}] rows to [containers] table")
+
+
+async def add_patches_to_database(patches: set[str]):
+    added_count = 0
+    async with get_async_session() as session:
+        current_db_patches = set(
+            (
+                await session.scalars(
+                    select(Sticker.full_name).where(Sticker.sticker_type == "patch")
+                )
+            ).all()
+        )
+        for patch in patches:
+            if patch not in current_db_patches:
+                session.add(Sticker.from_hashname("patch", patch))
+                logger.info(f"Added [{patch}] to [stickers] table")
+                added_count += 1
+
+    logger.info(f"Added [{added_count}] rows to [stickers] table")
+
+
+async def add_stickers_to_database(stickers: set[str]):
+    added_count = 0
+    async with get_async_session() as session:
+        current_db_stickers = set(
+            (
+                await session.scalars(
+                    select(Sticker.full_name).where(Sticker.sticker_type != "patch")
+                )
+            ).all()
+        )
+        for sticker in stickers:
+            if (
+                sticker := sticker.removeprefix("Sticker | ")
+            ) not in current_db_stickers:
+                session.add(Sticker.from_hashname("sticker", sticker))
+                logger.info(f"Added [{sticker}] to [stickers] table")
+                added_count += 1
+
+    logger.info(f"Added [{added_count}] rows to [stickers] table")
+
+
+async def add_tools_to_database(
+    keys: set[str], viewer_passes: set[str], operation_passes: set[str]
+):
+    added_count = 0
+    async with get_async_session() as session:
+        current_db_tools = set((await session.scalars(select(Tool.name))).all())
+        for tool in itertools.chain(keys, viewer_passes, operation_passes):
+            if tool not in current_db_tools:
+                session.add(Tool(tool))
+                logger.info(f"Added [{tool}] to [tools] table")
+                added_count += 1
+
+    logger.info(f"Added [{added_count}] rows to [tools] table")
+
+
+async def add_agents_to_database(agents: dict[str, set]):
+    added_count = 0
+    async with get_async_session() as session:
+        current_db_agents = set((await session.scalars(select(Agent.name))).all())
+        for side, agents_set in agents.items():
+            for name in agents_set:
+                if name not in current_db_agents:
+                    session.add(Agent(side, name))
+                    logger.info(f"Added [{side} - {name}] to [agents] table")
+                    added_count += 1
+
+    logger.info(f"Added [{added_count}] rows to [agents] table")
+
+
+async def add_market_items_to_database(
+    skins_dict: dict[str, dict[str, Any]],
+    cases: set,
+    patches: set,
+    stickers: set,
+    keys: set,
+    viewer_passes: set,
+    operation_passes: set,
+    agents: dict,
+):
+    await add_skins_to_database(skins_dict)
+    await add_containers_to_database(cases)
+    await add_patches_to_database(patches)
+    await add_stickers_to_database(stickers)
+    await add_tools_to_database(keys, viewer_passes, operation_passes)
+    await add_agents_to_database(agents)
+
+
+def save_to_file(filename: str, content: set[str]):
+    threshold, content_size = 1000, len(content)
+    chunks = content_size // threshold
+    content_iterator = iter(content)
+    if chunks == 0:
+        with open(filename, "w", encoding="utf-8") as file:
+            file.write("\n".join(content))
+    else:
+        for i in range(chunks + 1):
+            iteration_count = (
+                content_size - threshold * chunks if i == chunks else threshold
+            )
+
+            with open(f"{filename}-{i}", "w", encoding="utf-8") as file:
+                file.write(
+                    "\n".join(next(content_iterator) for _ in range(iteration_count))
+                )
 
 
 if __name__ == "__main__":
@@ -349,14 +568,46 @@ if __name__ == "__main__":
     }
     csgo_english_tokens = csgo_english["lang"]["Tokens"]
 
-    # Get all item's market hashnames
-    skins = get_skins(items_game, csgo_english_tokens_lower, items_game_cdn)
-    patches = get_patches(items_game["sticker_kits"], csgo_english_tokens)
-    stickers = get_stickers(csgo_english_tokens)
-    cases = get_cases(csgo_english_tokens)
-    keys = get_keys(csgo_english_tokens)
+    sticker_kits = {
+        value["item_name"].lstrip("#"): value
+        for value in items_game["sticker_kits"].values()
+        if not value["name"].startswith("spray")
+        and not re.search(r"^de(_[a-z0-9]+_)gold$", value["name"])
+    }
+
     agents = get_agents(csgo_english_tokens)
+    viewer_passes = get_viewer_passes(csgo_english_tokens)
+    operation_passes = get_operation_passes(csgo_english_tokens)
 
-    # TODO write item to database
+    # Dict is needed to write all skins to database.
+    # Set is needed to write all hashnames to file and check for the market price.
+    skins_dict, skins_set = get_skins(
+        items_game, csgo_english_tokens_lower, items_game_cdn
+    )
+    cases = get_cases(csgo_english_tokens)
 
-    pass
+    patches = get_patches(items_game["sticker_kits"], csgo_english_tokens)
+    stickers = get_stickers(csgo_english_tokens, sticker_kits)
+    keys = get_keys(csgo_english_tokens)
+
+    # save_to_file("cases", cases)  # OK
+    # save_to_file("agents", agents)  # OK
+    # save_to_file("keys", keys)  # OK
+    # save_to_file("patches", patches)  # OK
+    # save_to_file("stickers", stickers) # OK
+    # save_to_file("skins", skins_set)  # OK
+    # save_to_file("viewer_passes", viewer_passes)  # OK
+    # save_to_file("operation_passes", operations_passes)  # OK
+
+    asyncio.run(
+        add_market_items_to_database(
+            skins_dict,
+            cases,
+            patches,
+            stickers,
+            keys,
+            viewer_passes,
+            operation_passes,
+            agents,
+        )
+    )

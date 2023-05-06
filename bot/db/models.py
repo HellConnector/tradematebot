@@ -1,6 +1,8 @@
 import datetime as dt
 from typing import List
 
+from typing import Self
+
 from sqlalchemy import (
     Boolean,
     DateTime,
@@ -17,6 +19,9 @@ from bot import constants
 CSGO_ID = 730
 CSGO = "CSGO"
 DEFAULT_ITEM_LIMIT = 96
+
+
+# TODO Remove fields that don't used in search
 
 
 class Base(DeclarativeBase):
@@ -202,7 +207,7 @@ class Skin(Base):
         sv=False,
     ):
         self.skin_type = skin_type
-        self.collection = (collection,)
+        self.collection = collection
         self.name = name
         self.skin = skin
         self.full_name = full_name
@@ -231,6 +236,10 @@ class Skin(Base):
         if self.skin is None:  # statement for Vanilla knives
             names.append(self.full_name)
         return names
+
+    @classmethod
+    def from_dict(cls, skin_dict) -> Self:
+        return cls(**skin_dict)
 
 
 class Container(Base):
@@ -265,10 +274,10 @@ class Sticker(Base):
         Integer, primary_key=True, autoincrement=True, index=True, unique=True
     )
     sticker_type = mapped_column(String, nullable=False, index=True)
-    name = mapped_column(String, nullable=False, index=True)
+    name = mapped_column(String, nullable=False, index=True)  # TODO remove
     full_name = mapped_column(String, nullable=False, index=True)
-    collection = mapped_column(String)
-    tournament = mapped_column(String, nullable=True, default=None)
+    collection = mapped_column(String)  # TODO remove
+    tournament = mapped_column(String, nullable=True, default=None)  # TODO remove
 
     def __init__(self, sticker_type, name, full_name, collection, tournament=None):
         self.sticker_type = sticker_type
@@ -276,6 +285,10 @@ class Sticker(Base):
         self.full_name = full_name
         self.collection = collection
         self.tournament = tournament
+
+    @classmethod
+    def from_hashname(cls, sticker_type: str, hashname: str) -> Self:
+        return cls(sticker_type, hashname, hashname, None)
 
 
 class Tool(Base):

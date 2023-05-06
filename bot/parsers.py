@@ -169,7 +169,7 @@ async def parse_sticker_text(text: str, s: AsyncSession) -> List[str]:
     words = text.split()
     stickers = await s.scalars(
         select(table.full_name).filter(
-            table.sticker_type.in_(("tournament", "regular")),
+            table.sticker_type != "patch",
             and_(func.lower(table.full_name).contains(n) for n in words[1:]),
         )
     )
@@ -280,7 +280,3 @@ async def parse_knife_text(text: str, s: AsyncSession) -> List[str]:
         if name:
             names.append(name)
     return names
-
-
-if __name__ == "__main__":
-    print(db.DB_ADDR)
