@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 import time
 from dataclasses import dataclass
@@ -13,14 +14,16 @@ load_dotenv()
 MARKET_URL = "https://steamcommunity.com/market/priceoverview/?appid=730&currency=5&market_hash_name={item_name}"
 PROXIES_URL = os.getenv("PROXIES_URL")
 
+logger = logging.getLogger("price-worker")
+
 
 def timeit(func):
     async def inner(*args, **kwargs):
         start = time.monotonic()
-        print("Execution start")
+        logger.info("Execution start")
         await func(*args, **kwargs)
         stop = time.monotonic()
-        print(f"Execution time = {stop - start:.2f}s")
+        logger.info(f"Execution time = {stop - start:.2f}s")
 
     return inner
 
@@ -81,7 +84,9 @@ class ItemPriceManager:
             )
 
     def show_progress(self):
-        print(f"Progress is {100 * self.success_count / len(self.items.values()):.2f}%")
+        logger.info(
+            f"Progress is {100 * self.success_count / len(self.items.values()):.2f}%"
+        )
 
     def update_item(self, item: Item):
         self.items.update({item.name: item})
@@ -151,7 +156,7 @@ async def main():
 
         results = await asyncio.gather(*tasks)
         stop = time.monotonic()
-        print(f"Iteration took {stop-start:.2f}s")
+        logger.info(f"Iteration took {stop-start:.2f}s")
         manager.show_progress()
     pass
 
