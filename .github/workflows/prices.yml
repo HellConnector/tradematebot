@@ -27,6 +27,7 @@ jobs:
 
       - name: run worker script
         env:
+          PYTHONUNBUFFERED: "1"
           PROXIES_URL: ${{ secrets.PROXIES_URL }}
         run: |
           cd price-worker
