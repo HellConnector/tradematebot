@@ -66,16 +66,16 @@ async def get_text_by_url(url: str) -> str:
 
 async def get_texts():
     items_game_url = (
-        "https://raw.githubusercontent.com/SteamDatabase/GameTracking-CSGO/master/csgo"
-        "/scripts/items/items_game.txt"
+        "https://raw.githubusercontent.com/SteamDatabase/GameTracking-CS2/master/game"
+        "/csgo/pak01_dir/scripts/items/items_game.txt"
     )
     csgo_english_url = (
-        "https://raw.githubusercontent.com/SteamDatabase/GameTracking-CSGO/master/csgo"
-        "/resource/csgo_english.txt"
+        "https://raw.githubusercontent.com/SteamDatabase/GameTracking-CS2/master/game"
+        "/csgo/pak01_dir/resource/csgo_english.txt"
     )
     items_game_cdn_url = (
-        "https://raw.githubusercontent.com/SteamDatabase/GameTracking"
-        "-CSGO/master/csgo/scripts/items/items_game_cdn.txt"
+        "https://raw.githubusercontent.com/SteamDatabase/GameTracking-CS2/master/game"
+        "/csgo/pak01_dir/scripts/items/items_game_cdn.txt"
     )
 
     results = await asyncio.gather(
@@ -597,7 +597,7 @@ if __name__ == "__main__":
     # save_to_file("stickers", stickers) # OK
     # save_to_file("skins", skins_set)  # OK
     # save_to_file("viewer_passes", viewer_passes)  # OK
-    # save_to_file("operation_passes", operations_passes)  # OK
+    # save_to_file("operation_passes", operation_passes)  # OK
 
     asyncio.run(
         add_market_items_to_database(
