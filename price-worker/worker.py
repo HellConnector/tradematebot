@@ -88,10 +88,8 @@ class ItemPriceManager:
 
 
 def read_items_from_file(file: str) -> set[str]:
-    with open(file) as f, open("no-price-stickers") as no_price:
-        all_stickers = set(f.read().splitlines())
-        no_price_stickers = set(no_price.read().splitlines())
-        return all_stickers - no_price_stickers
+    with open(file) as f:
+        return set(f.read().splitlines())
 
 
 def map_item_to_proxy(items: Iterator[Item], proxies: list[str]):
