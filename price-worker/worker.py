@@ -193,10 +193,17 @@ async def main():
 
         results = filter(lambda i: i is not None, (await asyncio.gather(*tasks)))
         for item in results:
-            logger.info(item)
+            if item.has_price:
+                logger.info(item)
         stop = time.monotonic()
         logger.info(f"Iteration took {stop-start:.2f}s")
         manager.show_progress()
+    logger.info(f"----------------------------SUMMARY----------------------------")
+    logger.info(f"Has price -> {manager.success_count} items")
+    logger.info(f"Doesn't have price -> {manager.remaining_count} items")
+    for item in filter(lambda i: i.success_no_price, manager.items.values()):
+        logger.info(item)
+    logger.info(f"----------------------------SUMMARY----------------------------")
 
 
 def run():
