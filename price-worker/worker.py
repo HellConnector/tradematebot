@@ -15,6 +15,8 @@ MARKET_URL = "https://steamcommunity.com/market/priceoverview/?appid=730&currenc
 PROXIES_URL = os.getenv("PROXIES_URL")
 
 logger = logging.getLogger("price-worker")
+logger.setLevel(logging.INFO)
+logger.addHandler(logging.StreamHandler())
 
 
 def timeit(func):
