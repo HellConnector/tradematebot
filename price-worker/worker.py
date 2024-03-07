@@ -13,6 +13,7 @@ load_dotenv()
 
 MARKET_URL = "https://steamcommunity.com/market/priceoverview/?appid=730&currency=5&market_hash_name={item_name}"
 PROXIES_URL = os.getenv("PROXIES_URL")
+REQUESTS_PER_ITEM = 10
 
 logger = logging.getLogger("price-worker")
 logger.setLevel(logging.INFO)
@@ -49,7 +50,38 @@ class Item:
 
     @property
     def has_price(self) -> bool:
-        return self.price.success if self.price and self.price.success else False
+        return (
+            self.price.success
+            if self.price
+            and self.price.success
+            and (self.price.median_price or self.price.lowest_price)
+            else False
+        )
+
+    @property
+    def success_no_price(self) -> bool:
+        return (
+            self.price.success
+            if self.price
+            and self.price.success
+            and (not self.price.median_price and not self.price.lowest_price)
+            else False
+        )
+
+    @property
+    def price_string(self) -> str | None:
+        if not self.has_price:
+            return
+        if self.price.lowest_price:
+            return self.price.lowest_price
+        else:
+            return self.price.median_price
+
+    def __str__(self):
+        if self.has_price:
+            return f"[{self.name}] --> [{self.price_string}]"
+        else:
+            return f"[{self.name}] --> NO PRICE"
 
 
 class ItemPriceManager:
@@ -62,11 +94,17 @@ class ItemPriceManager:
 
     @property
     def finished(self) -> bool:
-        return all(item.has_price for item in self.items.values())
+        return all(
+            (item.has_price or item.success_no_price) for item in self.items.values()
+        )
 
     @property
     def items_without_price(self) -> Iterator[Item]:
-        return (item for item in self.items.values() if not item.has_price)
+        return (
+            item
+            for item in self.items.values()
+            if not item.has_price or item.success_no_price
+        )
 
     @property
     def success_count(self) -> int:
@@ -110,7 +148,7 @@ async def get_http_proxies() -> list[str]:
     return response.content.decode("utf-8").split()
 
 
-async def get_price(item: Item, proxy: str, timeout: int) -> Item | None:
+async def get_item_price(item: Item, proxy: str, timeout: int) -> Item | None:
     async with httpx.AsyncClient(
         proxy=f"http://{proxy}",
         timeout=timeout,
@@ -142,26 +180,28 @@ async def main():
                 timeout = 5
             case count if 11 <= count <= 100:
                 timeout = 10
-            # case count if 101 <= count <= 250:
-            #     timeout = 10
-            # case count if 251 <= count <= 500:
-            #     timeout = 10
             case _:
                 timeout = 15
 
         tasks = (
-            get_price(*item_proxy, timeout=timeout)
+            get_item_price(*item_proxy, timeout=timeout)
             for item_proxy in map_item_to_proxy(
-                chain(*(manager.items_without_price for _ in range(10))), proxies
+                chain(*(manager.items_without_price for _ in range(REQUESTS_PER_ITEM))),
+                proxies,
             )
         )
 
-        results = await asyncio.gather(*tasks)
+        results = filter(lambda i: i is not None, (await asyncio.gather(*tasks)))
+        for item in results:
+            logger.info(item)
         stop = time.monotonic()
         logger.info(f"Iteration took {stop-start:.2f}s")
         manager.show_progress()
-    pass
+
+
+def run():
+    asyncio.run(main())
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    run()

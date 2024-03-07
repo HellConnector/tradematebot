@@ -31,6 +31,9 @@ memray = "^1.7.0"
 vdf = "^3.4"
 aiohttp = "^3.8.4"
 
+[tool.poetry.scripts]
+price-worker = "price-worker.worker:run"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

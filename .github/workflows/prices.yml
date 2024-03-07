@@ -31,4 +31,4 @@ jobs:
           PROXIES_URL: ${{ secrets.PROXIES_URL }}
         run: |
           cd price-worker
-          poetry run python worker.py
+          poetry run price-worker
