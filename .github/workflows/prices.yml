@@ -3,9 +3,9 @@ name: Update prices
 on:
   workflow_dispatch:
 
-  push:
-    branches:
-      - add-price-worker
+#  push:
+#    branches:
+#      - add-price-worker
 
 jobs:
   update-prices:

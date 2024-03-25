@@ -3,8 +3,7 @@ from typing import List
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-import db
-import constants
+from bot import db, constants
 
 
 async def parse_weapon_text(text: str, s: AsyncSession) -> List[str]:

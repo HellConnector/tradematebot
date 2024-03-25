@@ -4,10 +4,8 @@ services:
 
   &db postgres:
     image: postgres:15.2
-    environment:
-      POSTGRES_DB: &postgres_db tradematebot_db
-      POSTGRES_USER: &postgres_user postgres
-      POSTGRES_PASSWORD: &postgres_password postgres
+    env_file:
+      - .env
     ports:
       - "5432:5432"
 
@@ -15,14 +13,10 @@ services:
     image: hellconnector/tradematebot:3.11-slim-buster
     environment:
       POSTGRES_HOST: *db
-      POSTGRES_USER: *postgres_user
-      POSTGRES_PASSWORD: *postgres_password
-      POSTGRES_DB: *postgres_db
-    entrypoint: ["/bin/bash", "-c"]
-    command:
-      - |
-        cd db
-        alembic upgrade head
+    env_file:
+      - .env
+    working_dir: "/app/bot/db"
+    entrypoint: ["alembic", "upgrade", "head"]
     depends_on:
       - postgres
 
@@ -33,11 +27,23 @@ services:
       dockerfile: Dockerfile
     environment:
       POSTGRES_HOST: *db
-      POSTGRES_USER: *postgres_user
-      POSTGRES_PASSWORD: *postgres_password
-      POSTGRES_DB: *postgres_db
     env_file:
       - .env
     depends_on:
       - postgres
       - db-migration
+
+  mini-app:
+    image: hellconnector/tradematebot:3.11-slim-buster
+    environment:
+      POSTGRES_HOST: *db
+    env_file:
+      - .env
+    working_dir: "/app"
+    entrypoint: ["uvicorn", "mini-app.main:app", "--host", "0.0.0.0", "--port", "80"]
+    ports:
+      - "80:80"
+    depends_on:
+      - postgres
+      - db-migration
+      - bot

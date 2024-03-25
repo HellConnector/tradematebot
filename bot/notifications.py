@@ -7,11 +7,9 @@ from sqlalchemy.orm import selectinload
 from telegram import ReplyKeyboardRemove, Update, User
 from telegram.ext import ContextTypes
 
-import messages as messages
-import constants
-import utils
-from logger import log
-from db import Client, Item
+from bot import messages, constants, utils
+from bot.db import Client, Item
+from bot.logger import log
 
 
 @utils.inject_db_session_and_client

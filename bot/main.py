@@ -1,9 +1,14 @@
+import datetime as dt
 import gc
 from warnings import filterwarnings
 
 from sqlalchemy import select, func, delete
 from sqlalchemy.ext.asyncio import AsyncSession
-from telegram import ReplyKeyboardRemove, Update, User
+from telegram import (
+    ReplyKeyboardRemove,
+    Update,
+    User,
+)
 from telegram.constants import ParseMode
 from telegram.ext import (
     Application,
@@ -18,18 +23,18 @@ from telegram.ext import (
 )
 from telegram.warnings import PTBUserWarning
 
-import constants
-import deals
-import menu
-import messages
-import notifications
-import parsers
-import settings
-import stats
-import tracking
-import utils
-from db import Client, Deal, Item, get_async_session, Price
-from logger import log
+from bot import (
+    constants,
+    deals,
+    menu,
+    messages,
+    notifications,
+    parsers,
+    settings,
+    utils,
+)
+from bot.db import Client, Deal, Item, get_async_session, Price
+from bot.logger import log
 
 filterwarnings(
     action="ignore", message=r".*CallbackQueryHandler", category=PTBUserWarning
@@ -262,9 +267,12 @@ async def send_notifications(context: ContextTypes.DEFAULT_TYPE):
             message = f"{messages.notify_take_profit_reached[client.lang]}{items_str}"
 
             # Sending message
-            await context.bot.send_message(
-                chat_id=chat_id, text=message, reply_markup=ReplyKeyboardRemove()
-            )
+            try:
+                await context.bot.send_message(
+                    chat_id=chat_id, text=message, reply_markup=ReplyKeyboardRemove()
+                )
+            except Exception:
+                log.info(f"Failed to send message to chat [{chat_id}]")
 
             # Turning notification flag to False
             client_items = (
@@ -285,7 +293,7 @@ def store_price_limits_in_bot_data(context: ContextTypes.DEFAULT_TYPE, limits):
     context.bot_data.update(limits)
 
 
-def main():
+def run():
     defaults = Defaults(parse_mode=ParseMode.MARKDOWN)
 
     bot = (
@@ -297,19 +305,12 @@ def main():
     )
 
     job: JobQueue = bot.job_queue
-    # job.run_repeating(
-    #     send_notifications,
-    #     interval=3600,
-    #     first=dt.datetime(year=2023, day=1, month=1, minute=45),
-    # )
-
     job.run_repeating(
         send_notifications,
-        interval=60,
+        interval=3600,
     )
 
-    job.run_once(update_price_limits, 0)
-    # job.run_daily(update_price_limits, time=dt.time(hour=3, minute=33))
+    job.run_daily(update_price_limits, time=dt.time(hour=3, minute=33))
 
     pattern_func = [
         (utils.w_pattern, parsers.parse_weapon_text),
@@ -345,8 +346,6 @@ def main():
         states={
             utils.State.MAIN_MENU: [
                 CallbackQueryHandler(menu.deals, pattern=r"^Deals$"),
-                CallbackQueryHandler(menu.stats, pattern=r"^Stats$"),
-                CallbackQueryHandler(menu.tracking, pattern=r"^Tracking$"),
                 CallbackQueryHandler(menu.notifications, pattern=r"^Notifications$"),
             ],
             utils.State.DEALS: [
@@ -359,16 +358,6 @@ def main():
                 ),
                 MessageHandler(filters.Regex(utils.cp_pattern), deals.item_count_price),
                 MessageHandler(filters.Regex(r"(?!menu\b)\b\w+"), deals.unknown_query),
-            ],
-            utils.State.STATS: [
-                CallbackQueryHandler(
-                    stats.get_items_stats, pattern=r"^(Newest|%|Value)$"
-                )
-            ],
-            utils.State.TRACKING: [
-                CallbackQueryHandler(
-                    tracking.get_tracking_table, pattern=r"^(%|Value)$"
-                )
             ],
             utils.State.NOTIFICATIONS: [
                 CallbackQueryHandler(
@@ -403,8 +392,8 @@ def main():
 
     bot.add_error_handler(error)
 
-    bot.run_polling()
+    bot.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
 if __name__ == "__main__":
-    main()
+    run()

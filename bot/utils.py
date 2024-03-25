@@ -5,13 +5,11 @@ from enum import Enum
 from functools import wraps
 from typing import List, Tuple, Union, Dict
 
-import requests
+import httpx
 from sqlalchemy import select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
-from telegram import ChatMember
+from telegram import ChatMember, WebAppInfo
 from telegram import (
-    KeyboardButton,
-    ReplyKeyboardMarkup,
     Update,
     User,
     InlineKeyboardMarkup,
@@ -19,20 +17,16 @@ from telegram import (
 )
 from telegram.ext import ContextTypes
 
-import constants
-import messages as messages
-import settings
-from db import Client, Item, PriceLimit, get_async_session
-from logger import log
+from bot import constants, messages, settings
+from bot.db import Client, Item, PriceLimit, get_async_session
+from bot.logger import log
 
 
 class State(Enum):
     MAIN_MENU = 0
     DEALS = 1
     ITEMS = 2
-    STATS = 3
-    TRACKING = 4
-    NOTIFICATIONS = 5
+    NOTIFICATIONS = 3
 
 
 ALLOWED_USERS_STATUS = (ChatMember.MEMBER, ChatMember.OWNER, ChatMember.ADMINISTRATOR)
@@ -115,21 +109,6 @@ async def is_item_limit_reached(
         return False
 
 
-def get_reply_markup(buttons: Union[List, Tuple], rows=1) -> ReplyKeyboardMarkup:
-    if not 1 <= rows <= len(buttons):
-        raise ValueError(
-            "Rows count can not be less than 1 and more than buttons count."
-        )
-    cols = math.ceil(len(buttons) / rows)
-    last_row_count = len(buttons) - (cols * (rows - 1))
-    keyboard = [
-        [KeyboardButton(str(buttons[i * cols + j])) for j in range(cols)]
-        for i in range(rows - 1)
-    ]
-    keyboard.append([KeyboardButton(str(b)) for b in buttons[-last_row_count:]])
-    return ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
-
-
 def get_inline_markup(buttons: Union[List, Tuple], rows=1) -> InlineKeyboardMarkup:
     if not 1 <= rows <= len(buttons):
         raise ValueError(
@@ -155,8 +134,33 @@ def get_inline_markup(buttons: Union[List, Tuple], rows=1) -> InlineKeyboardMark
     return InlineKeyboardMarkup(keyboard)
 
 
+def get_inline_markup_keyboard_row(
+    buttons: Union[List, Tuple]
+) -> list[InlineKeyboardButton]:
+    return [InlineKeyboardButton(button, callback_data=button) for button in buttons]
+
+
 def get_main_menu_inline_markup() -> InlineKeyboardMarkup:
-    return get_inline_markup(constants.MAIN_MENU, rows=2)
+    web_app_markup = InlineKeyboardMarkup(
+        inline_keyboard=[
+            get_inline_markup_keyboard_row(["Deals", "Notifications"]),
+            [
+                InlineKeyboardButton(
+                    "Stats",
+                    web_app=WebAppInfo(
+                        url=f"{settings.MINI_APP_URL}/stats/?sort=newest"
+                    ),
+                ),
+                InlineKeyboardButton(
+                    "Tracking",
+                    web_app=WebAppInfo(
+                        url=f"{settings.MINI_APP_URL}/tracking/?sort=percent"
+                    ),
+                ),
+            ],
+        ]
+    )
+    return web_app_markup
 
 
 def get_items_keyboard(user_data: Dict) -> InlineKeyboardMarkup:
@@ -231,18 +235,19 @@ async def update_price_limits() -> dict | None:
     )
     headers = {"apikey": settings.CURRENCY_API_KEY}
     try:
-        response = requests.get(url, timeout=15, headers=headers).json()
-    except requests.RequestException:
-        log.exception("Can not receive currency rates from fixer.io")
+        async with httpx.AsyncClient() as client:
+            response = (await client.get(url, timeout=15, headers=headers)).json()
+    except httpx.TimeoutException:
+        log.exception("Failed to receive currency rates from fixer.io")
         return
     except ValueError:
-        log.exception("Can not parse response JSON")
+        log.exception("Failed to parse response JSON")
         return
     limits_to_return = {"price_limits": {}}
     rates: Dict = response.get("rates")
     if rates:
         if rates["USD"] == 0:
-            log.info("Can not parse currency rates -> USD rate equals to zero")
+            log.info("Failed to parse currency rates -> USD rate equals to zero")
             return
         async with get_async_session() as session:
             price_limits = (await session.scalars(select(PriceLimit))).all()

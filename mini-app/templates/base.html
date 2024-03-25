@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta content="width=device-width, initial-scale=1" name="viewport">
+  <meta content="width=device-width, initial-scale=1.0" http-equiv="X-UA-Compatible">
+  <title>TradeMateApp</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script crossorigin="anonymous"
+          integrity="sha384-0gxUXCCR8yv9FM2b+U3FDbsKthCI66oH5IA9fHppQq9DDMHuMauqq1ZHBpJxQ0J0"
+          src="https://unpkg.com/htmx.org@1.9.11"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      color: var(--tg-theme-text-color);
+      background: var(--tg-theme-bg-color);
+    }
+  </style>
+
+</head>
+<body>
+{% block content %} {% endblock %}
+<script>
+  const app = window.Telegram.WebApp;
+  app.ready();
+  app.expand();
+  app.MainButton.setText("Sort");
+  app.MainButton.onClick(showPopup);
+</script>
+</body>
+</html>

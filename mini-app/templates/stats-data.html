@@ -1,0 +1,84 @@
+<header
+    class="sticky top-0 flex gap-2 items-center justify-between bg-white mx-2 px-8 border text-center text-m text-green-600">
+  <div>
+    <div>Spent</div>
+    <div>{{ currency }} {{ spent }}</div>
+  </div>
+  <div class="text-center">
+    <div>Earned</div>
+    <div>{{ currency }} {{ earned }}</div>
+  </div>
+  <div class="text-center">
+    <div>Income</div>
+    <div>{{ currency }} {{ income }}</div>
+  </div>
+</header>
+{% for item in items %}
+{% set price_color = "text-green-600" %}
+{% set arrow = "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" %}
+{% if item.income_value|float() < 0.0 %}
+{% set price_color = "text-red-600" %}
+{% set arrow = "M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" %}
+{% endif %}
+<article class="rounded-lg border border-black-600 bg-white p-2 m-2">
+  <div class="flex items-center gap-4 justify-between">
+    <span class="rounded-full bg-purple-100 px-1.5 py-0.5 text-xs text-purple-700">{{ item.name }}</span>
+    <span class="text-xs text-gray-500">
+      <span class="rounded-full bg-purple-100 px-1.5 py-0.5 text-xs text-purple-700">{{ item.left }}</span>
+    </span>
+  </div>
+  <div class="flex items-center gap-4 justify-between">
+    <div>
+      <div class="flex gap-4">
+        <span class="text-xl font-medium {{price_color}}">{{ currency }} {{ item.income_value }}</span>
+      </div>
+      <div class="flex gap-1 {{price_color}}">
+        <svg
+            class="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+              d="{{arrow}}"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+          />
+        </svg>
+        <p class="flex gap-2 text-xs">
+          <span class="font-medium">{{ item.income_percentage }}%</span>
+          <span class="text-gray-500">In {{ item.hold_days }} days</span>
+        </p>
+      </div>
+    </div>
+    <div class="overflow-x-auto border-1 border-gray-200 m-1">
+      <table class="min-w-auto bg-white text-xs">
+        <thead>
+        <tr class="odd:bg-gray-50">
+          <td class="px-1 border whitespace-nowrap text-gray-900"></td>
+          <td class="px-1 border whitespace-nowrap text-gray-900">Count</td>
+          <td class="px-1 border whitespace-nowrap text-gray-900">Price, {{ currency }}</td>
+          <td class="px-1 border whitespace-nowrap text-gray-900">Total, {{ currency }}</td>
+        </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+        <tr class="odd:bg-gray-50">
+          <td class="px-1 border whitespace-nowrap text-gray-900">Buy</td>
+          <td class="px-1 border whitespace-nowrap text-gray-900">{{ item.buy_count }}</td>
+          <td class="px-1 border whitespace-nowrap text-gray-900">{{ item.buy_price }}</td>
+          <td class="px-1 border whitespace-nowrap text-gray-900">{{ item.spent }}</td>
+        </tr>
+        <tr class="odd:bg-gray-50">
+          <td class="px-1 border whitespace-nowrap text-gray-900">Sell</td>
+          <td class="px-1 border whitespace-nowrap text-gray-900">{{ item.sell_count }}</td>
+          <td class="px-1 border whitespace-nowrap text-gray-900">{{ item.sell_price }}</td>
+          <td class="px-1 border whitespace-nowrap text-gray-900">{{ item.earned }}</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</article>
+{% endfor %}

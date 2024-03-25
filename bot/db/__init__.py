@@ -4,7 +4,7 @@ from typing import AsyncContextManager
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
 import bot.settings as settings
-
+from .data_helper import get_stats_data, get_tracking_data
 from .models import (
     Base,
     Client,
@@ -18,7 +18,6 @@ from .models import (
     Sticker,
     Agent,
 )
-
 
 DB_ADDR = (
     f"postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@"
@@ -55,4 +54,6 @@ __all__ = (
     "Agent",
     "get_async_session",
     "DB_ADDR",
+    "get_stats_data",
+    "get_tracking_data",
 )
