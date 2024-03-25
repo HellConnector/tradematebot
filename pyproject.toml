@@ -1,35 +1,48 @@
 [tool.poetry]
 name = "tradematebot"
 version = "0.1.0"
-description = "Telegram Bot that helps to monitor and track CS:GO investments"
+description = "Telegram Bot that helps to monitor and track CS2 investments"
 authors = ["HellConnector <kavai.barbarian@gmail.com>"]
 license = "Apache License 2.0"
 readme = "README.md"
 
 packages = [
-    { include = "bot" }
+    { include = "bot" },
+    { include = "cs2-items-parser" },
+    { include = "price-worker" },
+    { include = "mini-app" },
 ]
 
 [tool.poetry.dependencies]
 python = "^3.11"
-requests = "^2.28.2"
-SQLAlchemy = "^2.0.9"
-python-telegram-bot = "^20.2"
-asyncpg = "^0.27.0"
+python-telegram-bot = "^21.0.1"
+asyncpg = "^0.29.0"
 apscheduler = "^3.10.1"
-pillow = "^9.5.0"
 alembic = "^1.10.3"
 python-dotenv = "^1.0.0"
+sqlalchemy = {version = "^2.0.27", extras = ["asyncio"]}
+httpx = "^0.27.0"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.0.262"
 black = "^23.3.0"
 memray = "^1.7.0"
 
-
 [tool.poetry.group.parser.dependencies]
 vdf = "^3.4"
-aiohttp = "^3.8.4"
+
+[tool.poetry.group.mini-app.dependencies]
+fastapi = "^0.110.0"
+uvicorn = {version = "^0.28.0", extras = ["standard"]}
+jinja2 = "^3.1.3"
+python-multipart = "^0.0.9"
+
+[tool.poetry.scripts]
+bot = "bot.main:run"
+mini-app = "mini-app.main:run"
+price-worker = "price-worker.main:run"
+items2db-worker = "cs2-items-parser.main:run"
+alembic = "bot.db.command:run"
 
 [build-system]
 requires = ["poetry-core"]

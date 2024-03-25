@@ -8,11 +8,9 @@ from sqlalchemy.orm import selectinload
 from telegram import ReplyKeyboardRemove, Update, User
 from telegram.ext import ContextTypes
 
-import messages
-import constants
-import utils
-from db import Client, Deal, Item, Price
-from logger import log
+from bot import messages, constants, utils
+from bot.db import Client, Deal, Item, Price
+from bot.logger import log
 
 
 def get_item_function(pattern, pars_func):

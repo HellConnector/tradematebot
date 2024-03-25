@@ -4,7 +4,7 @@ import logging
 import re
 from typing import Any
 
-import aiohttp
+import httpx
 import vdf
 from sqlalchemy import select
 
@@ -59,23 +59,23 @@ SOUVENIR_COLLECTIONS = (
 
 
 async def get_text_by_url(url: str) -> str:
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            return await response.text()
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url)
+    return response.text
 
 
 async def get_texts():
     items_game_url = (
-        "https://raw.githubusercontent.com/SteamDatabase/GameTracking-CSGO/master/csgo"
-        "/scripts/items/items_game.txt"
+        "https://raw.githubusercontent.com/SteamDatabase/GameTracking-CS2/master/game"
+        "/csgo/pak01_dir/scripts/items/items_game.txt"
     )
     csgo_english_url = (
-        "https://raw.githubusercontent.com/SteamDatabase/GameTracking-CSGO/master/csgo"
-        "/resource/csgo_english.txt"
+        "https://raw.githubusercontent.com/SteamDatabase/GameTracking-CS2/master/game"
+        "/csgo/pak01_dir/resource/csgo_english.txt"
     )
     items_game_cdn_url = (
-        "https://raw.githubusercontent.com/SteamDatabase/GameTracking"
-        "-CSGO/master/csgo/scripts/items/items_game_cdn.txt"
+        "https://raw.githubusercontent.com/SteamDatabase/GameTracking-CS2/master/game"
+        "/csgo/pak01_dir/scripts/items/items_game_cdn.txt"
     )
 
     results = await asyncio.gather(
@@ -109,7 +109,7 @@ def get_stickers(tokens: dict, sticker_kits: dict) -> set[str]:
             and "(Gold) | Cologne 2015" not in line
             and "(Gold) | Cluj-Napoca 2015" not in line
             and "(Gold) | MLG Columbus 2016" not in line
-            and "(Gold)  | MLG Columbus 2016" not in line  # double space (WTF)
+            and "(Gold)  | MLG Columbus 2016" not in line  # double space (WTF Valve #1)
             and "(Gold) | Cologne 2016" not in line
             and "(Gold) | Atlanta 2017" not in line
             and "All-Stars" not in line
@@ -338,7 +338,7 @@ def get_skins(
             if (
                 item_lootlist
                 and list(item_lootlist.keys())[0] in SOUVENIR_COLLECTIONS
-                # # R8 Bone Mask has Souvenir (WTF!?) and MP5-SD Lab Rat
+                # # R8 Bone Mask has Souvenir (WTF Valve #2) and MP5-SD Lab Rat
             ) or skin_key in ("weapon_revolver_sp_tape", "weapon_mp5sd_hy_labrat_mp5"):
                 is_souvenir = True
 
@@ -555,7 +555,7 @@ def save_to_file(filename: str, content: set[str]):
                 )
 
 
-if __name__ == "__main__":
+def run():
     items_game_text, csgo_english_text, items_game_cdn_text = asyncio.run(get_texts())
 
     items_game = vdf.loads(items_game_text)["items_game"]
@@ -597,7 +597,7 @@ if __name__ == "__main__":
     # save_to_file("stickers", stickers) # OK
     # save_to_file("skins", skins_set)  # OK
     # save_to_file("viewer_passes", viewer_passes)  # OK
-    # save_to_file("operation_passes", operations_passes)  # OK
+    # save_to_file("operation_passes", operation_passes)  # OK
 
     asyncio.run(
         add_market_items_to_database(
@@ -611,3 +611,7 @@ if __name__ == "__main__":
             agents,
         )
     )
+
+
+if __name__ == "__main__":
+    run()

@@ -9,6 +9,7 @@ stream_handler.setFormatter(formatter)
 stream_handler.setLevel(logging.INFO)
 
 logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 log = logging.getLogger()
 log.setLevel(logging.INFO)
