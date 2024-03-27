@@ -202,6 +202,11 @@ async def tracking(request: Request) -> HTMLResponse:
     return templates.TemplateResponse("tracking.html", context={"request": request})
 
 
+@app.get("/", response_class=HTMLResponse)
+async def index(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse("index.html", context={"request": request})
+
+
 def run():
     uvicorn.run("mini-app.main:app", port=5000, reload=True)
 

@@ -1,7 +1,6 @@
 all: build_image
 
 include .env
-export
 
 PYTHON_VERSION = 3.11-slim-buster
 POETRY_VERSION = 1.8.2
