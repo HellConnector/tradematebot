@@ -221,15 +221,18 @@ async def main():
         match manager.remaining_count:
             case count if 1 <= count <= 10:
                 timeout = 5
+                requests_per_item = 10
             case count if 11 <= count <= 100:
                 timeout = 10
+                requests_per_item = 5
             case _:
                 timeout = 15
+                requests_per_item = 2
 
         tasks = (
             get_item_price(*item_proxy, timeout=timeout)
             for item_proxy in map_item_to_proxy(
-                chain(*(manager.items_without_price for _ in range(REQUESTS_PER_ITEM))),
+                chain(*(manager.items_without_price for _ in range(requests_per_item))),
                 proxies,
             )
         )
@@ -259,7 +262,7 @@ async def main():
                                 price=item.price_float,
                             )
                         )
-                    # logger.info(item)
+                    logger.info(item)
 
         stop = time.monotonic()
         logger.info(f"Iteration completed in {stop-start:.2f}s")
