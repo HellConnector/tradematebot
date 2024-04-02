@@ -259,7 +259,7 @@ async def main():
                                 price=item.price_float,
                             )
                         )
-                    logger.info(item)
+                    # logger.info(item)
 
         stop = time.monotonic()
         logger.info(f"Iteration completed in {stop-start:.2f}s")
