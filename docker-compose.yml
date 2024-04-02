@@ -40,9 +40,18 @@ services:
     env_file:
       - .env
     working_dir: "/app"
-    entrypoint: ["uvicorn", "mini-app.main:app", "--host", "0.0.0.0", "--port", "80"]
+    entrypoint: [
+      "uvicorn", "mini-app.main:app",
+      "--host", "0.0.0.0",
+      "--port", "443",
+      "--ssl-keyfile", "/app/${SSL_KEY_PATH}",
+      "--ssl-certfile", "/app/${SSL_CERT_PATH}"
+    ]
     ports:
-      - "80:80"
+      - "443:443"
+    volumes:
+      - ${PWD}/${SSL_KEY_PATH}:/app/${SSL_KEY_PATH}
+      - ${PWD}/${SSL_CERT_PATH}:/app/${SSL_CERT_PATH}
     depends_on:
       - postgres
       - db-migration

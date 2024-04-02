@@ -3,9 +3,9 @@ name: Update prices
 on:
   workflow_dispatch:
 
-#  push:
-#    branches:
-#      - add-price-worker
+  push:
+    branches:
+      - add-ssl
 
 jobs:
   update-prices:
@@ -29,6 +29,10 @@ jobs:
         env:
           PYTHONUNBUFFERED: "1"
           PROXIES_URL: ${{ secrets.PROXIES_URL }}
+          POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         run: |
           cd price-worker
           poetry run price-worker

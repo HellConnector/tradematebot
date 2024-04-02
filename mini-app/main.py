@@ -8,18 +8,39 @@ from urllib.parse import unquote
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, HTTPException, Header
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from sqlalchemy import select
 
+from bot import settings
 from bot.db import get_async_session, Client, get_stats_data, get_tracking_data
 
 load_dotenv()
 
 app = FastAPI()
+app.add_middleware(HTTPSRedirectMiddleware)
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
+origins = [
+    "http://127.0.0.1:8000",
+    "https://127.0.0.1:8000",
+    "http://localhost:8000",
+    "https://localhost:8000",
+    os.getenv("MINI_APP_URL"),
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["GET"],
+    allow_headers=["*"],
+)
+
+SSL_KEY_PATH = os.getenv("SSL_KEY_PATH")
+SSL_CERT_PATH = os.getenv("SSL_CERT_PATH")
 
 templates = Jinja2Templates(directory="mini-app/templates")
 
@@ -66,7 +87,7 @@ def is_valid_raw_init_data(authorization: Annotated[RawInitData, Header()]):
         )
     )
     secret_key = hmac.new(
-        "WebAppData".encode(), BOT_TOKEN.encode(), hashlib.sha256
+        "WebAppData".encode(), settings.BOT_TOKEN.encode(), hashlib.sha256
     ).digest()
     expected_hash = hmac.new(
         secret_key, data_check_string.encode(), hashlib.sha256
@@ -208,7 +229,13 @@ async def index(request: Request) -> HTMLResponse:
 
 
 def run():
-    uvicorn.run("mini-app.main:app", port=5000, reload=True)
+    uvicorn.run(
+        "mini-app.main:app",
+        port=8000,
+        reload=True,
+        ssl_keyfile=SSL_KEY_PATH,
+        ssl_certfile=SSL_CERT_PATH,
+    )
 
 
 if __name__ == "__main__":
