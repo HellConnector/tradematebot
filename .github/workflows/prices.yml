@@ -9,6 +9,9 @@ on:
 
 jobs:
   update-prices:
+    strategy:
+      matrix:
+        segment: [0, 1, 2]
     runs-on: ubuntu-latest
     steps:
       - name: checkout
@@ -33,6 +36,7 @@ jobs:
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          SEGMENT: ${{ matrix.segment }}
         run: |
           cd price-worker
           poetry run price-worker

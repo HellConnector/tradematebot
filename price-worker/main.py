@@ -19,7 +19,9 @@ load_dotenv()
 
 MARKET_URL = "https://steamcommunity.com/market/priceoverview/"
 PROXIES_URL = os.getenv("PROXIES_URL")
+SEGMENT = int(os.getenv("SEGMENT"))
 REQUESTS_PER_ITEM = 10
+
 
 logger = logging.getLogger("price-worker")
 logger.setLevel(logging.INFO)
@@ -158,10 +160,14 @@ def read_items_from_file(file: str) -> set[str]:
 
 
 async def get_items_from_db() -> Iterator[MarketItem]:
+    items_count = 500
+    offset = items_count * SEGMENT
     query = (
         select(Item.name.label("item_name"), Deal.deal_currency.label("currency"))
         .where(Item.id == Deal.item_id)
         .group_by(Item.name, Deal.deal_currency)
+        .limit(items_count)
+        .offset(offset)
     )
     async with get_async_session() as session:
         items = map(
@@ -236,31 +242,33 @@ async def main():
                 )
             )
 
-            results: Iterator[MarketItem] = filter(
-                lambda i: i is not None, (await asyncio.gather(*tasks))
+            results: list[MarketItem] = list(
+                filter(
+                    lambda i: i is not None and i.has_price,
+                    (await asyncio.gather(*tasks)),
+                )
             )
 
             for item in results:
-                if item.has_price:
-                    db_price = await session.scalar(
-                        select(Price).where(
-                            Price.name == item.name,
-                            Price.currency == item.currency.name,
+                db_price = await session.scalar(
+                    select(Price).where(
+                        Price.name == item.name,
+                        Price.currency == item.currency.name,
+                    )
+                )
+                if db_price:
+                    db_price.price = item.price_float
+                    db_price.updated = datetime.now()
+                else:
+                    session.add(
+                        Price(
+                            name=item.name,
+                            currency=item.currency.value,
+                            updated=datetime.now(),
+                            price=item.price_float,
                         )
                     )
-                    if db_price:
-                        db_price.price = item.price_float
-                        db_price.updated = datetime.now()
-                    else:
-                        session.add(
-                            Price(
-                                name=item.name,
-                                currency=item.currency.value,
-                                updated=datetime.now(),
-                                price=item.price_float,
-                            )
-                        )
-                    logger.info(item)
+                logger.info(item)
             await session.commit()
 
             stop = time.monotonic()
