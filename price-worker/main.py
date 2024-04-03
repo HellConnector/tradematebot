@@ -219,36 +219,33 @@ async def get_item_price(
 @timeit
 async def main():
     manager = ItemPriceManager(await get_items_from_db())
-    async with get_async_session() as session:
-        while not manager.finished:
-            start = time.monotonic()
-            proxies = await get_http_proxies()
+    while not manager.finished:
+        start = time.monotonic()
+        proxies = await get_http_proxies()
 
-            match manager.remaining_count:
-                case count if 1 <= count <= 10:
-                    timeout = 5
-                case count if 11 <= count <= 100:
-                    timeout = 10
-                case _:
-                    timeout = 15
+        match manager.remaining_count:
+            case count if 1 <= count <= 10:
+                timeout = 5
+            case count if 11 <= count <= 100:
+                timeout = 10
+            case _:
+                timeout = 15
 
-            tasks = (
-                get_item_price(*item_proxy, timeout=timeout)
-                for item_proxy in map_item_to_proxy(
-                    chain(
-                        *(manager.items_without_price for _ in range(REQUESTS_PER_ITEM))
-                    ),
-                    proxies,
-                )
+        tasks = (
+            get_item_price(*item_proxy, timeout=timeout)
+            for item_proxy in map_item_to_proxy(
+                chain(*(manager.items_without_price for _ in range(REQUESTS_PER_ITEM))),
+                proxies,
             )
+        )
 
-            results: list[MarketItem] = list(
-                filter(
-                    lambda i: i is not None and i.has_price,
-                    (await asyncio.gather(*tasks)),
-                )
+        results: list[MarketItem] = list(
+            filter(
+                lambda i: i is not None and i.has_price,
+                (await asyncio.gather(*tasks)),
             )
-
+        )
+        async with get_async_session() as session:
             for item in results:
                 db_price = await session.scalar(
                     select(Price).where(
@@ -269,11 +266,9 @@ async def main():
                         )
                     )
                 logger.info(item)
-            await session.commit()
-
-            stop = time.monotonic()
-            logger.info(f"Iteration completed in {stop-start:.2f}s")
-            manager.show_progress()
+        stop = time.monotonic()
+        logger.info(f"Iteration completed in {stop-start:.2f}s")
+        manager.show_progress()
     logger.info(f"----------------------------SUMMARY----------------------------")
     logger.info(f"Has price -> {manager.success_count} items")
     logger.info(f"Doesn't have price -> {manager.remaining_count} items")
