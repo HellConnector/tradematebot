@@ -3,12 +3,14 @@ name: Update prices
 on:
   workflow_dispatch:
 
-#  push:
-#    branches:
-#      - add-price-worker
+#  schedule:
+#    - cron: "*/15 * * * *"
 
 jobs:
   update-prices:
+    strategy:
+      matrix:
+        segment: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     runs-on: ubuntu-latest
     steps:
       - name: checkout
@@ -29,6 +31,12 @@ jobs:
         env:
           PYTHONUNBUFFERED: "1"
           PROXIES_URL: ${{ secrets.PROXIES_URL }}
+          POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          SEGMENT: ${{ matrix.segment }}
+          ITEMS_IN_SEGMENT: "100"
         run: |
           cd price-worker
           poetry run price-worker

@@ -12,3 +12,5 @@ docker-compose.yml
 **/venv
 **/.venv
 **/env
+**/.cert
+mini-app/.cert

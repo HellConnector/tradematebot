@@ -142,3 +142,5 @@ dmypy.json
 
 /bot/persistence
 /persistence
+
+mini-app/.cert

@@ -17,7 +17,4 @@ CHANNEL_ID = os.getenv("CHANNEL_ID")
 # Currency API
 CURRENCY_API_KEY = os.getenv("CURRENCY_API_KEY")
 
-# Docker registry
-DOCKER_HUB_TOKEN = os.getenv("DOCKER_HUB_TOKEN")
-
 MINI_APP_URL = os.getenv("MINI_APP_URL")
