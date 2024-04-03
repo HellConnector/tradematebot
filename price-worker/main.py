@@ -265,6 +265,7 @@ async def main():
                             price=item.price_float,
                         )
                     )
+                    session.commit()
                 logger.info(item)
         stop = time.monotonic()
         logger.info(f"Iteration completed in {stop-start:.2f}s")
