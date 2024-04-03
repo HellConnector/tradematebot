@@ -6,7 +6,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from itertools import cycle, chain
+from itertools import cycle, chain, islice
 from typing import Self, Iterator
 
 import httpx
@@ -163,11 +163,12 @@ def read_items_from_file(file: str) -> set[str]:
 
 async def get_items_from_db() -> Iterator[MarketItem]:
     query = (
-        select(Item.name.label("item_name"), Deal.deal_currency.label("currency"))
+        select(
+            Item.name.label("item_name"),
+            Deal.deal_currency.label("currency"),
+        )
         .where(Item.id == Deal.item_id)
         .group_by(Item.name, Deal.deal_currency)
-        .limit(ITEMS_IN_SEGMENT)
-        .offset(OFFSET)
     )
     async with get_async_session() as session:
         items = map(
@@ -175,7 +176,7 @@ async def get_items_from_db() -> Iterator[MarketItem]:
             (await session.execute(query)).all(),
         )
 
-    return items
+    return islice(items, OFFSET, OFFSET + ITEMS_IN_SEGMENT)
 
 
 def map_item_to_proxy(items: Iterator[MarketItem], proxies: list[str]):
