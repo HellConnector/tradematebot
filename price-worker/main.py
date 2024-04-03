@@ -160,7 +160,7 @@ def read_items_from_file(file: str) -> set[str]:
 
 
 async def get_items_from_db() -> Iterator[MarketItem]:
-    items_count = 500
+    items_count = 200
     offset = items_count * SEGMENT
     query = (
         select(Item.name.label("item_name"), Deal.deal_currency.label("currency"))

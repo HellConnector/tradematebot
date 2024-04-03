@@ -11,7 +11,7 @@ jobs:
   update-prices:
     strategy:
       matrix:
-        segment: [0, 1, 2]
+        segment: [0, 1, 2, 3, 4, 5, 6]
     runs-on: ubuntu-latest
     steps:
       - name: checkout
