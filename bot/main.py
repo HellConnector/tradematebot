@@ -311,6 +311,7 @@ def run():
     )
 
     job.run_daily(update_price_limits, time=dt.time(hour=3, minute=33))
+    job.run_once(update_price_limits, when=0)
 
     pattern_func = [
         (utils.w_pattern, parsers.parse_weapon_text),
