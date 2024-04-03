@@ -3,9 +3,8 @@ name: Update prices
 on:
   workflow_dispatch:
 
-  push:
-    branches:
-      - add-ssl
+#  schedule:
+#    - cron: "*/15 * * * *"
 
 jobs:
   update-prices:
