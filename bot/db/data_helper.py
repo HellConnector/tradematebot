@@ -85,9 +85,6 @@ async def get_stats_data(client_id, currency, sort_key, session) -> list:
 
 
 async def get_tracking_data(chat_id, currency, session):
-    item_limit = await session.scalar(
-        select(Client.item_limit).where(Client.chat_id == chat_id)
-    )
     client_deals = await session.execute(
         select(
             func.min(Deal.date),
@@ -111,7 +108,6 @@ async def get_tracking_data(chat_id, currency, session):
             Deal.deal_currency == currency,
         )
         .group_by(Deal.item_id, Item.name, Price.price, Item.count, Deal.deal_currency)
-        .limit(item_limit)
     )
 
     deals = []
