@@ -1,12 +1,12 @@
 import datetime as dt
-import math
 import re
 from enum import Enum
 from functools import wraps
 from typing import List, Tuple, Union, Dict
 
 import httpx
-from sqlalchemy import select, desc
+import math
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from telegram import ChatMember, WebAppInfo
 from telegram import (
@@ -18,7 +18,7 @@ from telegram import (
 from telegram.ext import ContextTypes
 
 from bot import constants, messages, settings
-from bot.db import Client, Item, PriceLimit, get_async_session
+from bot.db import Client, PriceLimit, get_async_session
 from bot.logger import log
 
 
@@ -81,32 +81,6 @@ def inject_db_session_and_client(callback):
             return await callback(*args, **kwargs)
 
     return inner
-
-
-async def is_item_limit_reached(
-    user: User, item_name: str, session: AsyncSession, client: Client
-) -> bool:
-    client_items = list(
-        map(
-            lambda i: i.name,
-            (
-                await session.scalars(
-                    client.items.select()
-                    .where(Item.count > 0)
-                    .order_by(desc(Item.updated))
-                )
-            ).all(),
-        )
-    )
-
-    if len(client_items) >= client.item_limit and item_name not in client_items:
-        await user.send_message(
-            messages.item_limit_reached_message[client.lang],
-            reply_markup=get_main_menu_inline_markup(),
-        )
-        return True
-    else:
-        return False
 
 
 def get_inline_markup(buttons: Union[List, Tuple], rows=1) -> InlineKeyboardMarkup:

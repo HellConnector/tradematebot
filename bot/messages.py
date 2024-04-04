@@ -18,7 +18,7 @@ currency_choose = {
 
 reg_message = {
     RU: "Добро пожаловать в TradeMateBot! \U0001F916"
-    "\n\nЭтот бот поможет вам с с вашими CS:GO инвестициями"
+    "\n\nЭтот бот поможет вам с с вашими CS2 инвестициями"
     "\U0001F4B0\n\nЧто я могу? \U0001F3AF"
     "\n\n- Я могу запоминать все твои сделки, теперь ты ничего не упустишь."
     "\U0001F4DD\nНапример, когда ты что-то продаешь или покупаешь, просто дай мне знать, "
@@ -32,7 +32,7 @@ reg_message = {
     "а также уведомления о технических работах будут именно там."
     "\U0001F911\n\nПеред началом работы, выбери свою валюту с помощью кнопок.",
     EN: "Welcome to TradeMateBot! \U0001F916"
-    "\n\nThis bot is dedicated to help you with CS:GO investments "
+    "\n\nThis bot is dedicated to help you with CS2 investments "
     "\U0001F4B0\n\nWhat can I do? \U0001F3AF"
     "\n\n- I can remember all your deals, so you don't miss a thing "
     "\U0001F4DD\nFor example when you buy or sell something just let "
@@ -136,11 +136,6 @@ select_item_skip_message = {
     RU: "Сперва найдите ваш предмет с помощью запроса.\n"
     "Наберите /help, если нужна помощь.",
     EN: "You need to query items first.\n" "Enter /help if you need help.",
-}
-
-item_limit_reached_message = {
-    RU: "Вы достигли ограничения на количество предметов - 96 шт.",
-    EN: "You have reached items count limit of 96.",
 }
 
 item_not_set = {

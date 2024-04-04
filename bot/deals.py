@@ -35,12 +35,7 @@ def get_item_function(pattern, pars_func):
             reply_message = get_items_reply_message(names, text, client.lang, deal_type)
             if len(names) == 1:
                 u_data[constants.ITEM_NAME] = names[0]
-                if deal_type == "buy":
-                    if await utils.is_item_limit_reached(
-                        user, names[0], session, client
-                    ):
-                        return utils.State.MAIN_MENU
-                else:
+                if deal_type == "sell":
                     item = await session.scalar(
                         select(Item).filter(
                             Item.name == names[0],
@@ -137,9 +132,6 @@ async def selected_item(
                         reply_markup=utils.get_inline_markup(constants.DEAL_TYPES),
                     )
                     return utils.State.DEALS
-        else:
-            if await utils.is_item_limit_reached(user, item_name, session, client):
-                return utils.State.MAIN_MENU
         u_data[constants.CLIENT_ID] = client.id
         u_data[constants.CLIENT_CURRENCY] = client.currency
         await user.send_message(
