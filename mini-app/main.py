@@ -20,7 +20,7 @@ from bot.db import get_async_session, Client, get_stats_data, get_tracking_data
 
 load_dotenv()
 
-app = FastAPI()
+app = FastAPI(docs_url=None, openapi_url=None)
 app.add_middleware(HTTPSRedirectMiddleware)
 
 origins = [
