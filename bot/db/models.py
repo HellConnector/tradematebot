@@ -11,6 +11,8 @@ from sqlalchemy import (
     Integer,
     String,
     UniqueConstraint,
+    func,
+    BigInteger,
 )
 from sqlalchemy.orm import relationship, DeclarativeBase, mapped_column
 
@@ -53,6 +55,7 @@ class Client(Base):
     lang = mapped_column(String, default="EN")
 
     items = relationship("Item", lazy="write_only")
+    tracking_records = relationship("TrackingRecord", lazy="write_only")
 
     def __init__(
         self, name, chat_id, currency="USD", item_limit=DEFAULT_ITEM_LIMIT, lang="EN"
@@ -336,3 +339,21 @@ class PriceLimit(Base):
         self.currency = currency
         self.value = value
         self.updated = updated
+
+
+class TrackingRecord(Base):
+    __tablename__ = "tracking_records"
+
+    id = mapped_column(
+        BigInteger,
+        primary_key=True,
+        autoincrement=True,
+        index=True,
+    )
+
+    client_id = mapped_column(
+        Integer, ForeignKey(Client.id), nullable=False, index=True
+    )
+    currency = mapped_column(String, index=True, nullable=False)
+    value = mapped_column(Float(precision=2), default=0.0)
+    measure_time = mapped_column(DateTime, nullable=False, server_default=func.now())
