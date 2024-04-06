@@ -1,6 +1,6 @@
 from datetime import datetime, date
 
-from sqlalchemy import select, func, case, desc
+from sqlalchemy import select, func, case, desc, Subquery, Numeric, Float
 
 from .models import Deal, Item, Client, Price
 
@@ -142,3 +142,48 @@ async def get_tracking_data(chat_id, currency, session):
         )
 
     return deals
+
+
+async def get_tracking_records(session) -> list[tuple[int, str, float]]:
+    sub_query: Subquery = (
+        select(
+            Client.id.label("client_id"),
+            Client.currency,
+            (
+                0.87 * Item.count * Price.price
+                - (
+                    Item.count
+                    * func.sum(Deal.price * Deal.volume)
+                    / func.sum(Deal.volume)
+                )
+            ).label("income_abs"),
+        )
+        .where(
+            Client.id == Item.client_id,
+            Deal.client_id == Client.id,
+            Deal.deal_type == "buy",
+            Deal.closed.is_(False),
+            Deal.item_id == Item.id,
+            Item.name == Price.name,
+            Item.count > 0,
+            Deal.deal_currency == Price.currency,
+        )
+        .group_by(Client.id, Client.currency, Item.id, Item.name, Price.price)
+    ).subquery()
+
+    query = (
+        select(
+            Client.id,
+            Client.currency,
+            func.round(func.sum(sub_query.c.income_abs).cast(Numeric), 2)
+            .cast(Float)
+            .label("value"),
+        )
+        .where(
+            Client.id == sub_query.c.client_id,
+        )
+        .group_by(Client.id, Client.currency)
+        .order_by(Client.id)
+    )
+
+    return (await session.execute(query)).all()
