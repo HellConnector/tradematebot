@@ -2,7 +2,7 @@ name: Update prices
 
 on:
   schedule:
-    - cron: "13/15 * * * *"
+    - cron: "13/30 * * * *"
 
 jobs:
   update-prices:
