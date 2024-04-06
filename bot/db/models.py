@@ -48,7 +48,7 @@ class Client(Base):
     )
     name = mapped_column(String, nullable=False, unique=False, index=True)
     chat_id = mapped_column(
-        Integer, nullable=False, unique=True, primary_key=True, index=True
+        BigInteger, nullable=False, unique=True, primary_key=True, index=True
     )
     currency = mapped_column(String, default="USD", index=True)
     item_limit = mapped_column(Integer, default=DEFAULT_ITEM_LIMIT)
