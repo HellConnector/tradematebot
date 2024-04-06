@@ -144,11 +144,12 @@ async def get_tracking_data(chat_id, currency, session):
     return deals
 
 
-async def get_tracking_records(session) -> list[tuple[int, str, float]]:
+async def get_tracking_records(session) -> list[tuple[int, str, float, float]]:
     sub_query: Subquery = (
         select(
             Client.id.label("client_id"),
             Client.currency,
+            (Item.count * Price.price).label("value"),
             (
                 0.87 * Item.count * Price.price
                 - (
@@ -156,7 +157,7 @@ async def get_tracking_records(session) -> list[tuple[int, str, float]]:
                     * func.sum(Deal.price * Deal.volume)
                     / func.sum(Deal.volume)
                 )
-            ).label("income_abs"),
+            ).label("income"),
         )
         .where(
             Client.id == Item.client_id,
@@ -175,9 +176,12 @@ async def get_tracking_records(session) -> list[tuple[int, str, float]]:
         select(
             Client.id,
             Client.currency,
-            func.round(func.sum(sub_query.c.income_abs).cast(Numeric), 2)
+            func.round(func.sum(sub_query.c.value).cast(Numeric), 2)
             .cast(Float)
             .label("value"),
+            func.round(func.sum(sub_query.c.income).cast(Numeric), 2)
+            .cast(Float)
+            .label("income"),
         )
         .where(
             Client.id == sub_query.c.client_id,

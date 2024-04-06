@@ -73,7 +73,9 @@ async def send_notifications(context: ContextTypes.DEFAULT_TYPE):
 async def update_tracking_records(context: ContextTypes.DEFAULT_TYPE):
     async with get_async_session() as session:
         tracking_records = await get_tracking_records(session)
-        for client_id, currency, value in tracking_records:
+        for client_id, currency, value, income in tracking_records:
             session.add(
-                TrackingRecord(client_id=client_id, currency=currency, value=value)
+                TrackingRecord(
+                    client_id=client_id, currency=currency, value=value, income=income
+                )
             )

@@ -356,4 +356,5 @@ class TrackingRecord(Base):
     )
     currency = mapped_column(String, index=True, nullable=False)
     value = mapped_column(Float(precision=2), default=0.0)
+    income = mapped_column(Float(precision=2), default=0.0)
     measure_time = mapped_column(DateTime, nullable=False, server_default=func.now())
