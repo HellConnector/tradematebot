@@ -24,7 +24,7 @@ DB_ADDR = (
     f"{settings.POSTGRES_HOST}/{settings.POSTGRES_DB}"
 )
 
-async_engine = create_async_engine(DB_ADDR, echo=False, pool_size=10, max_overflow=20)
+async_engine = create_async_engine(DB_ADDR, echo=False, pool_size=20, max_overflow=20)
 
 
 @asynccontextmanager
