@@ -2,7 +2,6 @@ from contextlib import asynccontextmanager
 from typing import AsyncContextManager
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.pool import NullPool
 
 import bot.settings as settings
 from .data_helper import get_stats_data, get_tracking_data
@@ -25,7 +24,7 @@ DB_ADDR = (
     f"{settings.POSTGRES_HOST}/{settings.POSTGRES_DB}"
 )
 
-async_engine = create_async_engine(DB_ADDR, echo=False, pool_pre_ping=True, poolclass=NullPool)
+async_engine = create_async_engine(DB_ADDR, echo=False, pool_pre_ping=True, pool_size=20, max_overflow=20)
 
 
 @asynccontextmanager
