@@ -169,6 +169,7 @@ async def get_items_from_db() -> Iterator[MarketItem]:
         )
         .where(Item.id == Deal.item_id)
         .group_by(Item.name, Deal.deal_currency)
+        .order_by(Item.name)
     )
     async with get_async_session() as session:
         items = map(

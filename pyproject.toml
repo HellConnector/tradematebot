@@ -39,7 +39,7 @@ python-multipart = "^0.0.9"
 
 [tool.poetry.scripts]
 bot = "bot.main:run"
-mini-app = "mini-app.main:run"
+mini-app = "mini_app.main:run"
 price-worker = "price-worker.main:run"
 items2db-worker = "cs2-items-parser.main:run"
 alembic = "bot.db.command:run"

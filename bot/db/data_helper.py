@@ -1,11 +1,15 @@
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
+from typing import Sequence
 
 from sqlalchemy import select, func, case, desc, Subquery, Numeric, Float
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from .models import Deal, Item, Client, Price
+from .models import Deal, Item, Client, Price, TrackingRecord
 
 
-async def get_stats_data(client_id, currency, sort_key, session) -> list:
+async def get_stats_data(
+    client_id: int, currency: str, sort_key: str, session: AsyncSession
+) -> list:
     income_abs = "income_abs"
     income_prc = "income_prc"
 
@@ -84,7 +88,7 @@ async def get_stats_data(client_id, currency, sort_key, session) -> list:
     return (await session.execute(stats)).all()
 
 
-async def get_tracking_data(chat_id, currency, session):
+async def get_tracking_data(chat_id: int, currency: str, session: AsyncSession):
     client_deals = await session.execute(
         select(
             func.min(Deal.date),
@@ -144,7 +148,9 @@ async def get_tracking_data(chat_id, currency, session):
     return deals
 
 
-async def get_tracking_records(session) -> list[tuple[int, str, float, float]]:
+async def get_tracking_records(
+    session: AsyncSession,
+) -> list[tuple[int, str, float, float]]:
     sub_query: Subquery = (
         select(
             Client.id.label("client_id"),
@@ -191,3 +197,21 @@ async def get_tracking_records(session) -> list[tuple[int, str, float, float]]:
     )
 
     return (await session.execute(query)).all()
+
+
+async def get_tracking_records_for_user(
+    client: Client, span: int, session: AsyncSession
+) -> Sequence[TrackingRecord] | None:
+
+    tracking_records = (
+        await session.scalars(
+            client.tracking_records.select()
+            .where(
+                TrackingRecord.currency == client.currency,
+                TrackingRecord.measure_time >= datetime.now() - timedelta(days=span),
+            )
+            .order_by(TrackingRecord.measure_time.asc())
+        )
+    ).all()
+
+    return tracking_records

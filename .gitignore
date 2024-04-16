@@ -136,7 +136,6 @@ dmypy.json
 
 # VS Code folder
 .vscode/
-.pytest_cache/
 
 /bot/tokens.txt
 
@@ -144,3 +143,4 @@ dmypy.json
 /persistence
 
 mini-app/.cert
+mini_app/.cert

@@ -7,7 +7,7 @@ from urllib.parse import unquote
 
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request, HTTPException, Header
+from fastapi import FastAPI, Request, HTTPException, Header, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from fastapi.responses import HTMLResponse, FileResponse
@@ -17,6 +17,8 @@ from sqlalchemy import select
 
 from bot import settings
 from bot.db import get_async_session, Client, get_stats_data, get_tracking_data
+
+from mini_app.tracking_history import get_splitted_tracking_records, DateRange
 
 load_dotenv()
 
@@ -42,7 +44,7 @@ app.add_middleware(
 SSL_KEY_PATH = os.getenv("SSL_KEY_PATH")
 SSL_CERT_PATH = os.getenv("SSL_CERT_PATH")
 
-templates = Jinja2Templates(directory="mini-app/templates")
+templates = Jinja2Templates(directory="mini_app/templates")
 
 CURRENCY = {"USD": "$", "EUR": "€", "RUB": "₽", "UAH": "₴"}
 
@@ -230,12 +232,92 @@ async def index(request: Request) -> HTMLResponse:
 
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():
-    return FileResponse("mini-app/static/icon.png", media_type="image/x-icon")
+    return FileResponse("mini_app/static/icon.png", media_type="image/x-icon")
+
+
+@app.exception_handler(404)
+async def not_found(request: Request, exception: HTTPException):
+    return templates.TemplateResponse("404.html", context={"request": request})
+
+
+@app.get("/tracking-history/", response_class=HTMLResponse)
+async def tracking_history_index(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(
+        "tracking-history.html", context={"request": request}
+    )
+
+
+@app.get("/tracking-history/load/", response_class=HTMLResponse)
+async def load_tracking_history(
+    request: Request,
+    authorization: Annotated[str, Header()],
+    span: Annotated[
+        str, Query(pattern=rf"^({'|'.join(DateRange.names())})$")
+    ] = DateRange.day.name,
+) -> HTMLResponse:
+    if not is_valid_raw_init_data(
+        raw_init_data := RawInitData(init_data=authorization)
+    ):
+        raise HTTPException(status_code=400, detail="Empty raw_init_data")
+    async with get_async_session() as session:
+        if not (
+            client := await session.scalar(
+                select(Client).where(Client.chat_id == raw_init_data.user_id)
+            )
+        ):
+            raise HTTPException(status_code=404, detail="Client not found")
+        tracking_records = await get_splitted_tracking_records(
+            client, DateRange[span], session
+        )
+
+    if not tracking_records["values"]:
+        return templates.TemplateResponse("404.html", context={"request": request})
+
+    items = [
+        {"label": label, "value": value, "income": income}
+        for label, value, income in zip(
+            tracking_records["labels"],
+            tracking_records["values"],
+            tracking_records["incomes"],
+        )
+    ]
+
+    return templates.TemplateResponse(
+        "tracking-history-data.html",
+        context={
+            "request": request,
+            "items": items,
+            "max_value": (
+                max(tracking_records["values"]) if tracking_records["values"] else 1
+            ),
+            "min_value": (
+                min(tracking_records["values"]) if tracking_records["values"] else 0
+            ),
+            "currency": CURRENCY[client.currency],
+            "diff": (
+                diff := round(
+                    tracking_records["values"][-1] - tracking_records["values"][0], 2
+                )
+            ),
+            "diff_percent": round(100 * diff / tracking_records["values"][0], 2),
+            "price_color": "text-green-600" if diff >= 0 else "text-red-600",
+            "arrow": (
+                "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                if diff >= 0
+                else "M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
+            ),
+            "period": (
+                "for the last day"
+                if DateRange[span] == DateRange.day
+                else f"in the last {DateRange[span].value} days"
+            ),
+        },
+    )
 
 
 def run():
     uvicorn.run(
-        "mini-app.main:app",
+        "mini_app.main:app",
         port=8000,
         reload=True,
         ssl_keyfile=SSL_KEY_PATH,
