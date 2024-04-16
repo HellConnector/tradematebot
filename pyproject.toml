@@ -10,7 +10,7 @@ packages = [
     { include = "bot" },
     { include = "cs2-items-parser" },
     { include = "price-worker" },
-    { include = "mini-app" },
+    { include = "mini_app" },
 ]
 
 [tool.poetry.dependencies]
