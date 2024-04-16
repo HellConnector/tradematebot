@@ -9,6 +9,7 @@
           integrity="sha384-0gxUXCCR8yv9FM2b+U3FDbsKthCI66oH5IA9fHppQq9DDMHuMauqq1ZHBpJxQ0J0"
           src="https://unpkg.com/htmx.org@1.9.11"></script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/charts.css/dist/charts.min.css">
   <style>
     body {
       color: var(--tg-theme-text-color);
@@ -18,13 +19,10 @@
 
 </head>
 <body>
-{% block content %} {% endblock %}
 <script>
   const app = window.Telegram.WebApp;
   app.ready();
-  app.expand();
-  app.MainButton.setText("Sort");
-  app.MainButton.onClick(showPopup);
 </script>
+{% block content %} {% endblock %}
 </body>
 </html>

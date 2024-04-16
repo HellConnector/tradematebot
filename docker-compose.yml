@@ -41,7 +41,7 @@ services:
       - .env
     working_dir: "/app"
     entrypoint: [
-      "uvicorn", "mini-app.main:app",
+      "uvicorn", "mini_app.main:app",
       "--host", "0.0.0.0",
       "--port", "443",
       "--ssl-keyfile", "/app/${SSL_KEY_PATH}",

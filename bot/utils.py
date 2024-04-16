@@ -131,6 +131,12 @@ def get_main_menu_inline_markup() -> InlineKeyboardMarkup:
                         url=f"{settings.MINI_APP_URL}/tracking/?sort=percent"
                     ),
                 ),
+                InlineKeyboardButton(
+                    "History",
+                    web_app=WebAppInfo(
+                        url=f"{settings.MINI_APP_URL}/tracking-history/"
+                    ),
+                ),
             ],
         ]
     )

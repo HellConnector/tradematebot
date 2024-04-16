@@ -27,7 +27,7 @@ COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 COPY bot ./app/bot
 COPY cs2-items-parser ./app/cs2-items-parser
 COPY price-worker ./app/price-worker
-COPY mini-app ./app/mini-app
+COPY mini_app ./app/mini_app
 
 ENV PYTHONBUFFERED 1
 ENV PYTHONOPTIMIZE 1

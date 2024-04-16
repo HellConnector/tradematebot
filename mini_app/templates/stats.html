@@ -1,20 +1,23 @@
 {% extends "base.html" %}
 {% block content %}
 <section class="section"
-         hx-get="/tracking/load/"
+         hx-get="/stats/load/"
          hx-headers="js:{Authorization: app.initData}"
          hx-swap="show:top"
-         hx-target="#tracking"
+         hx-target="#stats"
          hx-trigger="load, popupEvent"
          hx-vals="js:{sort: chooseSortKey(event)}"
-         id="tracking-section">
-  <div class="container" hx-on="htmx:afterSettle: app.MainButton.show()" id="tracking">
+         id="stats-section"
+         hx-on="htmx:afterRequest: app.MainButton.setText('Sort'); app.MainButton.show()"
+>
+  <div class="container" id="stats">
   </div>
 </section>
 <script>
+  app.expand();
   function chooseSortKey(event) {
     if (!("detail" in event)) {
-      return "percent";
+      return "newest";
     } else {
       return event.detail.sort;
     }
@@ -24,14 +27,16 @@
     app.showPopup({
       message: 'Choose sorting parameter',
       buttons: [
-        {id: 'percent', type: 'default', text: '% (Default)'},
+        {id: 'newest', type: 'default', text: 'Newest (Default)'},
+        {id: 'percent', type: 'default', text: '%'},
         {id: 'value', type: 'default', text: 'Value'},
       ]
     }, function (btn) {
-      if (btn === "percent" || btn === "value") {
-        htmx.trigger("#tracking-section", "popupEvent", {sort: btn});
+      if (btn === "percent" || btn === "newest" || btn === "value") {
+        htmx.trigger("#stats-section", "popupEvent", {sort: btn});
       }
     });
   }
+  app.MainButton.onClick(showPopup);
 </script>
 {% endblock %}

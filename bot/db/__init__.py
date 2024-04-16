@@ -4,7 +4,12 @@ from typing import AsyncContextManager
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
 import bot.settings as settings
-from .data_helper import get_stats_data, get_tracking_data
+from .data_helper import (
+    get_stats_data,
+    get_tracking_data,
+    get_tracking_records,
+    get_tracking_records_for_user,
+)
 from .models import (
     Base,
     Client,
@@ -17,6 +22,7 @@ from .models import (
     PriceLimit,
     Sticker,
     Agent,
+    TrackingRecord,
 )
 
 DB_ADDR = (
@@ -52,8 +58,11 @@ __all__ = (
     "PriceLimit",
     "Sticker",
     "Agent",
+    "TrackingRecord",
     "get_async_session",
     "DB_ADDR",
     "get_stats_data",
     "get_tracking_data",
+    "get_tracking_records",
+    "get_tracking_records_for_user",
 )

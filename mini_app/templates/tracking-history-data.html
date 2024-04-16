@@ -1,0 +1,93 @@
+<style>
+  #scrollable {
+    --total-cells: {{items | length}};
+    --display-cells: 24;
+    --cell-size: 15px;
+    width: 100%;
+    max-width: 100%;
+    margin-right: auto;
+    padding-left: 27px;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+  }
+
+  #scrollable .column {
+    --aspect-ratio: auto;
+  }
+
+  #scrollable .column tbody {
+    height: 150px;
+    width: calc(var(--cell-size) * var(--total-cells));
+  }
+
+  #scrollable .column tr {
+    transition-duration: 0.1s;
+  }
+
+  #scrollable .column tr:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+  }
+
+  #scrollable .column tr:hover th {
+    background-color: rgba(0, 0, 0, 0.4);
+    color: #fff;
+  }
+
+  .charts-css .tooltip {
+    text-align: center;
+    font-size: 0.5rem;
+    line-height: 1rem;
+  }
+</style>
+<article id="tracking-history-chart" class="rounded-lg border border-black-600 bg-white p-2 m-2">
+  <div>
+    <p class="text-sm text-gray-500">Portfolio value difference</p>
+    <p class="text-2xl font-medium {{price_color}}">{{ currency }} {{ diff }}</p>
+  </div>
+  <div class="mt-1 flex gap-1 {{price_color}}">
+    <svg
+        class="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+          d="{{arrow}}"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+      />
+    </svg>
+
+    <p class="flex gap-2 text-xs">
+      <span class="font-medium">{{diff_percent}}% </span>
+      <span class="text-gray-500">{{ period }}</span>
+    </p>
+  </div>
+  <div class="rounded-lg border border-black-600 bg-white py-auto m-auto mt-2" id="scrollable">
+    <table class="charts-css column data-spacing-2 show-primary-axis hide-data show-data-on-hover">
+      <tbody>
+      {% for item in items %}
+      <tr onclick="this.classList.add('active')">
+        {% if loop.index0 == 0 %}
+        {% set color = "#7bc561" %}
+        {% else %}
+        {% if item.value >= loop.previtem.value %}
+        {% set color = "#7bc561" %}
+        {% else %}
+        {% set color = "#d05d5b" %}
+        {% endif %}
+        {% endif %}
+        <td style="--size: calc( 0.1 + 0.9 * ({{item.value}} - {{min_value}}) / ({{max_value}} - {{min_value}}) ); --color: {{color}};">
+          <span class="data"> {{ item.value }} </span>
+          <span class="tooltip">{% set date, time = item.label.split(" ")%} {{ time }} <br> {{ date }} <br> {{currency}} {{ item.value }} </span>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</article>

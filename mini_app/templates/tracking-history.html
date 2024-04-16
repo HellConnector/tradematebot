@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="section"
+         hx-get="/tracking-history/load/"
+         hx-headers="js:{Authorization: app.initData}"
+         hx-on="
+  htmx:afterRequest: app.MainButton.setText('Time interval');
+  app.MainButton.show();
+  if (document.getElementById('tracking-history-chart')) {
+    document.getElementById('help-info').style.display = 'block';
+  }"
+         hx-target="#charts-data"
+         hx-trigger="load, popupEvent"
+         hx-vals="js:{span: chooseSpanKey(event)}"
+         id="charts-section">
+  <div class="text-black" id="charts-data">
+  </div>
+</section>
+<div class="rounded-lg border-s-4 border-orange-400 bg-orange-50 p-2 m-2" id="help-info" role="alert"
+     style="display: none;">
+  <strong class="block font-medium text-gray-800">Some tips</strong>
+  <ul class="list-disc list-inside text-gray-600 text-xs">
+    <li>Click on a column to view detailed information</li>
+    <li>Scroll the chart area horizontally as needed</li>
+    <li>Select a different time interval if there is no data</li>
+    <li>Red column means the value is less than the previous one</li>
+    <li>Time interval between columns is approximately 1 hour</li>
+  </ul>
+</div>
+<script>
+  function chooseSpanKey(event) {
+    if (!("detail" in event)) {
+      return "day";
+    } else {
+      return event.detail.span;
+    }
+  }
+
+  function showPopup() {
+    app.showPopup({
+      message: 'Choose time interval',
+      buttons: [
+        {id: 'day', type: 'default', text: 'Day (Default)'},
+        {id: 'week', type: 'default', text: 'Week'},
+        {id: 'month', type: 'default', text: 'Month'},
+      ]
+    }, function (btn) {
+      if (btn === "day" || btn === "week" || btn === "month") {
+        htmx.trigger("#charts-section", "popupEvent", {span: btn});
+      }
+    });
+  }
+
+  app.MainButton.onClick(showPopup);
+</script>
+{% endblock %}
