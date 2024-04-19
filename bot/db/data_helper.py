@@ -88,7 +88,7 @@ async def get_stats_data(
     return (await session.execute(stats)).all()
 
 
-async def get_tracking_data(chat_id: int, currency: str, session: AsyncSession):
+async def get_tracking_data(client_id: int, currency: str, session: AsyncSession):
     client_deals = await session.execute(
         select(
             func.min(Deal.date),
@@ -100,7 +100,7 @@ async def get_tracking_data(chat_id: int, currency: str, session: AsyncSession):
             Deal.deal_currency,
         )
         .where(
-            Client.chat_id == chat_id,
+            Client.id == client_id,
             Deal.client_id == Client.id,
             Deal.deal_type == "buy",
             Deal.closed.is_(False),
