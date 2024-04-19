@@ -1,7 +1,7 @@
 <header
-    class="sticky top-0 flex gap-2 items-center justify-between bg-white mx-2 px-8 border text-center text-m text-green-600">
+    class="sticky top-0 flex gap-2 items-center justify-between bg-white mx-1 px-1 border text-center text-m text-green-600">
   <div>
-    <div>Spent</div>
+    <div class="text-center">Spent</div>
     <div>{{ currency }} {{ spent }}</div>
   </div>
   <div class="text-center">
@@ -13,6 +13,11 @@
     <div>{{ currency }} {{ income }}</div>
   </div>
 </header>
+<style>
+  details summary::-webkit-details-marker {
+    display: none;
+  }
+</style>
 {% for item in items %}
 {% set price_color = "text-green-600" %}
 {% set arrow = "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" %}
@@ -20,11 +25,26 @@
 {% set price_color = "text-red-600" %}
 {% set arrow = "M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" %}
 {% endif %}
-<article class="rounded-lg border border-black-600 bg-white p-2 m-2">
-  <div class="flex items-center gap-4 justify-between">
-    <span class="rounded-full bg-purple-100 px-1.5 py-0.5 text-xs text-purple-700">{{ item.name }}</span>
+<article class="rounded-lg border border-black-600 bg-white pt-1 pb-0 px-1 m-1">
+  <div class="container flex items-center gap-4 justify-between">
+    <details class="text-color-black px-1.5 py-0.5 rounded bg-purple-100 cursor-pointer group"
+             hx-get="/deals/load/"
+             hx-params="not sort"
+             hx-swap="innerHTML"
+             hx-target="next #item-deals"
+             hx-trigger="click once"
+             hx-vals="js:{item_name: '{{item.name}}'}"
+    >
+      <summary class="flex flex-wrap items-center">
+        <div>
+          <div
+              class="border-4 border-transparent border-s-purple-600 group-open:rotate-90 transition-transform origin-left"></div>
+        </div>
+        <span class="text-xs text-purple-700">{{ item.name }}</span>
+      </summary>
+    </details>
     <span class="text-xs text-gray-500">
-      <span class="rounded-full bg-purple-100 px-1.5 py-0.5 text-xs text-purple-700">{{ item.left }}</span>
+      <span class="rounded bg-purple-100 px-1.5 py-0.5 text-xs text-purple-700">{{ item.left }}</span>
     </span>
   </div>
   <div class="flex items-center gap-4 justify-between">
@@ -53,32 +73,45 @@
         </p>
       </div>
     </div>
-    <div class="overflow-x-auto border-1 border-gray-200 m-1">
-      <table class="min-w-auto bg-white text-xs">
+    <div class="overflow-x-auto border-1 border-gray-200 my-1">
+      <table class="min-w-auto bg-white text-xs text-gray-900">
         <thead>
-        <tr class="odd:bg-gray-50">
-          <td class="px-1 border whitespace-nowrap text-gray-900"></td>
-          <td class="px-1 border whitespace-nowrap text-gray-900">Count</td>
-          <td class="px-1 border whitespace-nowrap text-gray-900">Price, {{ currency }}</td>
-          <td class="px-1 border whitespace-nowrap text-gray-900">Total, {{ currency }}</td>
+        <tr class="odd:bg-gray-100 text-left font-bold">
+          <td class="px-1 border whitespace-nowrap"></td>
+          <td class="px-1 border whitespace-nowrap">Count</td>
+          <td class="px-1 border whitespace-nowrap">Price, {{ currency }}</td>
+          <td class="px-1 border whitespace-nowrap">Total, {{ currency }}</td>
         </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
-        <tr class="odd:bg-gray-50">
-          <td class="px-1 border whitespace-nowrap text-gray-900">Buy</td>
-          <td class="px-1 border whitespace-nowrap text-gray-900">{{ item.buy_count }}</td>
-          <td class="px-1 border whitespace-nowrap text-gray-900">{{ item.buy_price }}</td>
-          <td class="px-1 border whitespace-nowrap text-gray-900">{{ item.spent }}</td>
+        <tr>
+          <td class="px-1 border whitespace-nowrap">Buy</td>
+          <td class="px-1 border whitespace-nowrap">{{ item.buy_count }}</td>
+          <td class="px-1 border whitespace-nowrap">{{ item.buy_price }}</td>
+          <td class="px-1 border whitespace-nowrap">{{ item.spent }}</td>
         </tr>
-        <tr class="odd:bg-gray-50">
-          <td class="px-1 border whitespace-nowrap text-gray-900">Sell</td>
-          <td class="px-1 border whitespace-nowrap text-gray-900">{{ item.sell_count }}</td>
-          <td class="px-1 border whitespace-nowrap text-gray-900">{{ item.sell_price }}</td>
-          <td class="px-1 border whitespace-nowrap text-gray-900">{{ item.earned }}</td>
+        <tr>
+          <td class="px-1 border whitespace-nowrap">Sell</td>
+          <td class="px-1 border whitespace-nowrap">{{ item.sell_count }}</td>
+          <td class="px-1 border whitespace-nowrap">{{ item.sell_price }}</td>
+          <td class="px-1 border whitespace-nowrap">{{ item.earned }}</td>
         </tr>
         </tbody>
       </table>
     </div>
   </div>
+  <div id="item-deals"></div>
 </article>
 {% endfor %}
+<script>
+  document.querySelectorAll("details").forEach((detail) => {
+    detail.addEventListener("toggle", (event) => {
+      const dealsElement = detail.closest("article").querySelector("#item-deals");
+      if (!detail.open) {
+        dealsElement.style.display = "none";
+      } else {
+        dealsElement.style.display = "block";
+      }
+    });
+  });
+</script>

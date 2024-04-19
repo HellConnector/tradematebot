@@ -2,7 +2,7 @@
 
 This is the source code of Telegram bot named "TradeMateBot".
 
-It helps you to monitor your **Counter-Strike: Global Offensive**
+It helps you to monitor your **Counter-Strike 2**
 investments.
 It's like an automated notebook for all deals you make in
 Steam market.
@@ -35,6 +35,6 @@ Steam market.
 ## Menu options
 * `Deals` - Use this button if you want to add a new deal
 * `Notifications` - Notifications settings for items
-* `Stats` - Show deals statistics
-* `Tracking` - Use this button if you want to see info about all deals (prices, 
-  profits, hold days, etc.)
+* `Stats` - Shows deals statistics in Web App
+* `Tracking` - Shows current portfolio value with all info about deals in Web App
+* `History` - Shows column chart with the current portfolio difference per day/week/month

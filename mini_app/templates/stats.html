@@ -3,18 +3,18 @@
 <section class="section"
          hx-get="/stats/load/"
          hx-headers="js:{Authorization: app.initData}"
+         hx-on="htmx:afterRequest: app.MainButton.setText('Sort'); app.MainButton.show()"
          hx-swap="show:top"
          hx-target="#stats"
          hx-trigger="load, popupEvent"
          hx-vals="js:{sort: chooseSortKey(event)}"
          id="stats-section"
-         hx-on="htmx:afterRequest: app.MainButton.setText('Sort'); app.MainButton.show()"
 >
-  <div class="container" id="stats">
-  </div>
+  <div class="container" id="stats"></div>
 </section>
 <script>
   app.expand();
+
   function chooseSortKey(event) {
     if (!("detail" in event)) {
       return "newest";
@@ -37,6 +37,7 @@
       }
     });
   }
+
   app.MainButton.onClick(showPopup);
 </script>
 {% endblock %}

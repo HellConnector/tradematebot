@@ -14,10 +14,17 @@ from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from bot import settings
-from bot.db import get_async_session, Client, get_stats_data, get_tracking_data
-
+from bot.db import (
+    get_async_session,
+    Client,
+    get_stats_data,
+    get_tracking_data,
+    Item,
+    Deal,
+)
 from mini_app.tracking_history import get_splitted_tracking_records, DateRange
 
 load_dotenv()
@@ -120,9 +127,13 @@ async def load_stats(
         case _:
             sort_key = "Percent"
 
-    user_id = raw_init_data.user_id
     async with get_async_session() as session:
-        client = await session.scalar(select(Client).where(Client.chat_id == user_id))
+        if not (
+            client := await session.scalar(
+                select(Client).where(Client.chat_id == raw_init_data.user_id)
+            )
+        ):
+            raise HTTPException(status_code=404, detail="Client not found")
         stats_data = await get_stats_data(
             client_id=client.id,
             currency=client.currency,
@@ -171,11 +182,15 @@ async def load_tracking(
     ):
         raise HTTPException(status_code=400, detail="Empty raw_init_data")
 
-    user_id = raw_init_data.user_id
     async with get_async_session() as session:
-        client = await session.scalar(select(Client).where(Client.chat_id == user_id))
+        if not (
+            client := await session.scalar(
+                select(Client).where(Client.chat_id == raw_init_data.user_id)
+            )
+        ):
+            raise HTTPException(status_code=404, detail="Client not found")
         tracking_data = await get_tracking_data(
-            chat_id=user_id, currency=client.currency, session=session
+            client_id=client.id, currency=client.currency, session=session
         )
         # Sort deals
         # index=6 - income(%), index=7 - income($)
@@ -311,6 +326,51 @@ async def load_tracking_history(
                 if DateRange[span] == DateRange.day
                 else f"in the last {DateRange[span].value} days"
             ),
+        },
+    )
+
+
+@app.get("/deals/load/", response_class=HTMLResponse)
+async def get_item_deals_by_name(
+    request: Request,
+    authorization: Annotated[str, Header()],
+    item_name: str,
+) -> HTMLResponse:
+    if not is_valid_raw_init_data(
+        raw_init_data := RawInitData(init_data=authorization)
+    ):
+        raise HTTPException(status_code=400, detail="Empty raw_init_data")
+
+    if "\x00" in item_name:
+        raise HTTPException(status_code=400)
+
+    async with get_async_session() as session:
+        if not (
+            client := await session.scalar(
+                select(Client).where(Client.chat_id == raw_init_data.user_id)
+            )
+        ):
+            raise HTTPException(status_code=404, detail="Client not found")
+        item: Item = await session.scalar(
+            client.items.select()
+            .where(Item.name == item_name)
+            .options(selectinload(Item.deals))
+        )
+    deals: list[Deal] = item.deals if item else []
+    return templates.TemplateResponse(
+        "item-deals.html",
+        context={
+            "request": request,
+            "deals": [
+                {
+                    "date": deal.date.strftime("%d.%m.%Y %H:%M"),
+                    "type": deal.deal_type.capitalize(),
+                    "count": deal.volume,
+                    "price": round(deal.price, 2),
+                }
+                for deal in deals
+            ],
+            "currency": CURRENCY[client.currency],
         },
     )
 
