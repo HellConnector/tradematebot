@@ -188,7 +188,7 @@ async def get_http_proxies() -> list[str]:
     async with httpx.AsyncClient() as client:
         response = await client.get(PROXIES_URL)
 
-    return response.content.decode("utf-8").split()
+    return list(map(lambda x: ":".join(x.split(":")[0:2]), response.text.splitlines()))
 
 
 async def get_item_price(
@@ -214,7 +214,11 @@ async def get_item_price(
         except Exception:  # Ignore any exceptions here
             return
     if response.status_code == 200:
-        item.price = PriceResponse.from_dict(**response.json())
+        try:
+            json_response = response.json()
+        except Exception:
+            return
+        item.price = PriceResponse.from_dict(**json_response)
     return item
 
 
