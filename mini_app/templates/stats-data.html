@@ -101,3 +101,15 @@
   <div id="item-deals"></div>
 </article>
 {% endfor %}
+<script>
+  document.querySelectorAll("details").forEach((detail) => {
+    detail.addEventListener("toggle", (event) => {
+      const dealsElement = detail.closest("article").querySelector("#item-deals");
+      if (!detail.open) {
+        dealsElement.style.display = "none";
+      } else {
+        dealsElement.style.display = "block";
+      }
+    });
+  });
+</script>
