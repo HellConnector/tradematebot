@@ -357,6 +357,7 @@ async def get_item_deals_by_name(
             .options(selectinload(Item.deals))
         )
     deals: list[Deal] = item.deals if item else []
+    deals.sort(key=lambda deal: deal.date)
     return templates.TemplateResponse(
         "item-deals.html",
         context={

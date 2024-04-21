@@ -21,6 +21,61 @@
 <script>
   const app = window.Telegram.WebApp;
   app.ready();
+
+  function showMenu() {
+    app.showPopup({
+      message: 'Menu',
+      buttons: [
+        {id: 'sort', type: 'default', text: 'Sort'},
+        {id: 'filter', type: 'default', text: 'Filter'},
+        {id: 'reset-filter', type: 'destructive', text: 'Reset filter'},
+      ]
+    }, function (btn) {
+      if (btn === "sort") {
+        showSortPopup();
+      }
+      if (btn === "filter") {
+        filterItems();
+      }
+      if (btn === "reset-filter") {
+        resetFilter();
+      }
+    });
+  }
+
+  document.querySelectorAll("details").forEach((detail) => {
+    detail.addEventListener("toggle", (event) => {
+      const dealsElement = detail.closest("article").querySelector("#item-deals");
+      if (!detail.open) {
+        dealsElement.style.display = "none";
+      } else {
+        dealsElement.style.display = "block";
+      }
+    });
+  });
+
+  function filterItems() {
+    const itemName = prompt("Filter items");
+
+    if (itemName) {
+      console.log(itemName.toLowerCase());
+      const items = document.querySelectorAll("#item");
+      items.forEach((item) => {
+        const article = item.closest("article");
+        if (item.textContent.toLowerCase().search(itemName.toLowerCase()) === -1) {
+          article.style.display = "none";
+        } else {
+          article.style.display = "block";
+        }
+      })
+    }
+  }
+
+  function resetFilter() {
+    document.querySelectorAll("article").forEach((article) => {
+      article.style.display = "block";
+    })
+  }
 </script>
 {% block content %} {% endblock %}
 </body>

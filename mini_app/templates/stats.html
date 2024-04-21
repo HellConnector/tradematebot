@@ -3,7 +3,7 @@
 <section class="section"
          hx-get="/stats/load/"
          hx-headers="js:{Authorization: app.initData}"
-         hx-on="htmx:afterRequest: app.MainButton.setText('Sort'); app.MainButton.show()"
+         hx-on="htmx:afterRequest: app.MainButton.setText('Menu'); app.MainButton.show()"
          hx-swap="show:top"
          hx-target="#stats"
          hx-trigger="load, popupEvent"
@@ -23,7 +23,7 @@
     }
   }
 
-  function showPopup() {
+  function showSortPopup() {
     app.showPopup({
       message: 'Choose sorting parameter',
       buttons: [
@@ -38,6 +38,6 @@
     });
   }
 
-  app.MainButton.onClick(showPopup);
+  app.MainButton.onClick(showMenu);
 </script>
 {% endblock %}

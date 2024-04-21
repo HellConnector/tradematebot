@@ -1,5 +1,5 @@
 <header
-    class="sticky top-0 flex gap-2 items-center justify-between bg-white mx-1 px-1 border text-center text-m text-green-600">
+    class="sticky top-0 flex gap-2 h-12 items-center justify-between bg-white mx-1 px-1 border text-center text-m text-green-600">
   <div>
     <div class="text-center">Spent</div>
     <div>{{ currency }} {{ spent }}</div>
@@ -40,7 +40,7 @@
           <div
               class="border-4 border-transparent border-s-purple-600 group-open:rotate-90 transition-transform origin-left"></div>
         </div>
-        <span class="text-xs text-purple-700">{{ item.name }}</span>
+        <span class="text-xs text-purple-700" id="item">{{ item.name }}</span>
       </summary>
     </details>
     <span class="text-xs text-gray-500">

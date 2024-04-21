@@ -144,3 +144,5 @@ dmypy.json
 
 mini-app/.cert
 mini_app/.cert
+
+**/.DS_Store
