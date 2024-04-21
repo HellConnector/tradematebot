@@ -17,95 +17,102 @@
   details summary::-webkit-details-marker {
     display: none;
   }
+
+  .items-content {
+    overflow-y: scroll;
+    height: calc(100vh - 48px);
+  }
 </style>
-{% for item in items %}
-{% set price_color = "text-green-600" %}
-{% set arrow = "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" %}
-{% if item.income_value|float() < 0.0 %}
-{% set price_color = "text-red-600" %}
-{% set arrow = "M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" %}
-{% endif %}
-<article class="rounded-lg border border-black-600 bg-white pt-1 pb-0 px-1 m-1">
-  <div class="container flex items-center gap-4 justify-between">
-    <details class="text-color-black px-1.5 py-0.5 rounded bg-purple-100 cursor-pointer group"
-             hx-get="/deals/load/"
-             hx-params="not sort"
-             hx-swap="innerHTML"
-             hx-target="next #item-deals"
-             hx-trigger="click once"
-             hx-vals="js:{item_name: '{{item.name}}'}"
-    >
-      <summary class="flex flex-wrap items-center">
-        <div>
-          <div
-              class="border-4 border-transparent border-s-purple-600 group-open:rotate-90 transition-transform origin-left"></div>
-        </div>
-        <span class="text-xs text-purple-700" id="item">{{ item.name }}</span>
-      </summary>
-    </details>
-    <span class="text-xs text-gray-500">
+<div class="items-content">
+  {% for item in items %}
+  {% set price_color = "text-green-600" %}
+  {% set arrow = "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" %}
+  {% if item.income_value|float() < 0.0 %}
+  {% set price_color = "text-red-600" %}
+  {% set arrow = "M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" %}
+  {% endif %}
+  <article class="rounded-lg border border-black-600 bg-white pt-1 pb-0 px-1 m-1">
+    <div class="container flex items-center gap-4 justify-between">
+      <details class="text-color-black px-1.5 py-0.5 rounded bg-purple-100 cursor-pointer group"
+               hx-get="/deals/load/"
+               hx-params="not sort"
+               hx-swap="innerHTML"
+               hx-target="next #item-deals"
+               hx-trigger="click once"
+               hx-vals="js:{item_name: '{{item.name}}'}"
+      >
+        <summary class="flex flex-wrap items-center">
+          <div>
+            <div
+                class="border-4 border-transparent border-s-purple-600 group-open:rotate-90 transition-transform origin-left"></div>
+          </div>
+          <span class="text-xs text-purple-700" id="item">{{ item.name }}</span>
+        </summary>
+      </details>
+      <span class="text-xs text-gray-500">
       <span class="rounded bg-purple-100 px-1.5 py-0.5 text-xs text-purple-700">{{ item.count }}</span>
     </span>
-  </div>
-  <div class="flex items-center gap-4 justify-between">
-    <div>
-      <div class="flex gap-4">
-        <span class="text-xl font-medium {{price_color}}">{{ currency }} {{ item.income_value }}</span>
+    </div>
+    <div class="flex items-center gap-4 justify-between">
+      <div>
+        <div class="flex gap-4">
+          <span class="text-xl font-medium {{price_color}}">{{ currency }} {{ item.income_value }}</span>
+        </div>
+        <div class="flex gap-1 {{price_color}}">
+          <svg
+              class="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+                d="{{arrow}}"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+            />
+          </svg>
+          <p class="flex gap-2 text-xs">
+            <span class="font-medium">{{ item.income_percent }}%</span>
+            <span class="text-gray-500">In {{ item.hold_days }} days</span>
+          </p>
+        </div>
       </div>
-      <div class="flex gap-1 {{price_color}}">
-        <svg
-            class="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-              d="{{arrow}}"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-          />
-        </svg>
-        <p class="flex gap-2 text-xs">
-          <span class="font-medium">{{ item.income_percent }}%</span>
-          <span class="text-gray-500">In {{ item.hold_days }} days</span>
-        </p>
+      <div class="border-1 border-gray-200 my-1">
+        <table class="table-auto bg-white text-xs w-full text-gray-900 border">
+          <thead>
+          <tr class="odd:bg-gray-100 text-left font-bold">
+            <td class="px-1 border whitespace-nowrap"></td>
+            <td class="px-1 border whitespace-nowrap">Price, {{ currency }}</td>
+          </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+          <tr>
+            <td class="px-1 border whitespace-nowrap">Buy</td>
+            <td class="px-1 border whitespace-nowrap">{{ item.buy_price }}</td>
+          </tr>
+          <tr>
+            <td class="px-1 border whitespace-nowrap">Now</td>
+            <td class="px-1 border whitespace-nowrap">{{ item.current_price }}</td>
+          </tr>
+          </tbody>
+        </table>
       </div>
     </div>
-    <div class="border-1 border-gray-200 my-1">
-      <table class="table-auto bg-white text-xs w-full text-gray-900 border">
-        <thead>
-        <tr class="odd:bg-gray-100 text-left font-bold">
-          <td class="px-1 border whitespace-nowrap"></td>
-          <td class="px-1 border whitespace-nowrap">Price, {{ currency }}</td>
-        </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200">
-        <tr>
-          <td class="px-1 border whitespace-nowrap">Buy</td>
-          <td class="px-1 border whitespace-nowrap">{{ item.buy_price }}</td>
-        </tr>
-        <tr>
-          <td class="px-1 border whitespace-nowrap">Now</td>
-          <td class="px-1 border whitespace-nowrap">{{ item.current_price }}</td>
-        </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <div id="item-deals"></div>
-</article>
-{% endfor %}
-<script>
-  document.querySelectorAll("details").forEach((detail) => {
-    detail.addEventListener("toggle", (event) => {
-      const dealsElement = detail.closest("article").querySelector("#item-deals");
-      if (!detail.open) {
-        dealsElement.style.display = "none";
-      } else {
-        dealsElement.style.display = "block";
-      }
+    <div id="item-deals"></div>
+  </article>
+  {% endfor %}
+  <script>
+    document.querySelectorAll("details").forEach((detail) => {
+      detail.addEventListener("toggle", (event) => {
+        const dealsElement = detail.closest("article").querySelector("#item-deals");
+        if (!detail.open) {
+          dealsElement.style.display = "none";
+        } else {
+          dealsElement.style.display = "block";
+        }
+      });
     });
-  });
-</script>
+  </script>
+</div>
