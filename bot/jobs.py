@@ -5,12 +5,20 @@ from telegram.ext import ContextTypes
 from bot import utils, messages
 from bot.db import get_async_session, Client, Item, Price
 from bot.db.data_helper import get_tracking_records
-from bot.db.models import TrackingRecord
+from bot.db.models import TrackingRecord, PriceLimit
 from bot.logger import log
 
 
 async def update_price_limits(context: ContextTypes.DEFAULT_TYPE):
     limits = await utils.update_price_limits()
+    if not limits:
+        async with get_async_session() as session:
+            limits = {
+                "price_limits": {
+                    limit.currency: round(limit.value, 2)
+                    for limit in (await session.scalars(select(PriceLimit))).all()
+                }
+            }
     store_price_limits_in_bot_data(context, limits)
 
 

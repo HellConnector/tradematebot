@@ -223,6 +223,9 @@ async def update_price_limits() -> dict | None:
     except ValueError:
         log.exception("Failed to parse response JSON")
         return
+    if message := response.get("message"):
+        if "You have exceeded your daily/monthly API rate limit" in message:
+            return
     limits_to_return = {"price_limits": {}}
     rates: Dict = response.get("rates")
     if rates:
