@@ -104,8 +104,8 @@ class MarketItem:
             price = price.replace(",", "")
         price = price.replace(",", ".").replace(" ", "")
         price = re.sub(
-            r"([$₴€\-\s]|pуб\.)", "", price
-        )  # p - English letter in russian currency (WTF Valve #3)
+            r"([$₴€\-\s]|руб\.)", "", price
+        )  # p - English letter in russian currency (WTF Valve #3) -> Finally fixed
         return float(price)
 
     def __str__(self):
