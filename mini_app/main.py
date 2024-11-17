@@ -17,6 +17,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from bot import settings
+from bot.logger import log
 from bot.db import (
     get_async_session,
     Client,
@@ -80,7 +81,9 @@ def is_valid_raw_init_data(authorization: Annotated[RawInitData, Header()]):
         and "query_id=" in string_init_data
         and "user=" in string_init_data
         and "hash=" in string_init_data
+        and "signature=" in string_init_data
     ):
+        log.info(f"Invalid init_data: {string_init_data}")
         return False
 
     pairs = {
@@ -92,6 +95,7 @@ def is_valid_raw_init_data(authorization: Annotated[RawInitData, Header()]):
         (
             f"auth_date={pairs['auth_date']}",
             f"query_id={pairs['query_id']}",
+            f"signature={pairs['signature']}",
             f"user={pairs['user']}",
         )
     )
@@ -116,7 +120,7 @@ async def load_stats(
     if not is_valid_raw_init_data(
         raw_init_data := RawInitData(init_data=authorization)
     ):
-        print("invalid init_data ", authorization)
+        log.info("invalid init_data ", authorization)
         raise HTTPException(status_code=400, detail="Invalid raw_init_data")
 
     match sort:
