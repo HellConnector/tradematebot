@@ -112,6 +112,15 @@ def get_stickers(tokens: dict, sticker_kits: dict) -> set[str]:
     )
 
 
+def get_charms(tokens: dict, items_game: dict) -> set[str]:
+
+    keychain_defs = (
+        value.get("name") for value in items_game.get("keychain_definitions").values()
+    )
+
+    return set(tokens.get(f"keychain_{keychain}") for keychain in keychain_defs)
+
+
 def get_cases(tokens: dict) -> set[str]:
     generator = (
         value
@@ -239,46 +248,18 @@ def get_skins(
         value["name"]: value for value in items_game["paint_kits"].values()
     }
 
+    item_icons = [
+        value.get("icon_path").removeprefix("econ/default_generated/")
+        for value in items_game["alternate_icons2"]["weapon_icons"].values()
+    ]
+
     lootlists: dict = items_game["client_loot_lists"]
+    item_sets: dict = items_game["item_sets"]
 
     # Needs if wear_remap_min/max don't exist in paint kit
     default_paint_kit = paintkits.get("default")
     all_skins = set()
     all_skins_dict = {}
-
-    def parse_weapon(item, skin_key, prefab, item_lootlist: dict, all_prefabs):
-        is_souvenir = False if item_lootlist is None else has_souvenir(item_lootlist)
-
-        is_stattrak = "statted_item_base" in all_prefabs
-
-        if (
-            item_lootlist
-            and list(item_lootlist.keys())[0] in SOUVENIR_COLLECTIONS
-            # # R8 Bone Mask has Souvenir (WTF Valve #2) and MP5-SD Lab Rat
-        ) or skin_key in ("weapon_revolver_sp_tape", "weapon_mp5sd_hy_labrat_mp5"):
-            is_souvenir = True
-
-        if (
-            item_lootlist
-            and not is_souvenir
-            and any(
-                map(
-                    lambda s: list(item_lootlist.keys())[0].startswith(s),
-                    NON_STATTRAK_COLLECTIONS,
-                )
-            )
-        ):
-            is_stattrak = False
-
-        market_name = get_market_name(item, prefab)
-        paintkit_name = get_paintkit_name(paintkit_value) if not is_default else None
-        pass
-
-    def parse_knife():
-        pass
-
-    def parse_glove():
-        pass
 
     def get_market_name(item: dict, prefab: dict) -> str:
         if item_name := item.get("item_name"):
@@ -338,7 +319,7 @@ def get_skins(
             for key, value in lootlists.items():
                 if sub_loot_list_key in value:
                     return {key: value}
-        return
+        return lootlists.get(sub_loot_list_key)
 
     def has_souvenir(item_lootlist: dict) -> bool:
         lootlist_key = list(item_lootlist.keys())[0]
@@ -355,6 +336,44 @@ def get_skins(
 
         return False
 
+    def parse_item(item, skin_key, prefab, item_lootlist: dict, all_prefabs) -> tuple:
+        is_souvenir = False if item_lootlist is None else has_souvenir(item_lootlist)
+
+        is_stattrak = "statted_item_base" in all_prefabs
+
+        if (
+            item_lootlist
+            and list(item_lootlist.keys())[0] in SOUVENIR_COLLECTIONS
+            # # R8 Bone Mask has Souvenir (WTF Valve #2) and MP5-SD Lab Rat
+        ) or skin_key in ("weapon_revolver_sp_tape", "weapon_mp5sd_hy_labrat_mp5"):
+            is_souvenir = True
+
+        if (
+            item_lootlist
+            and not is_souvenir
+            and any(
+                map(
+                    lambda s: list(item_lootlist.keys())[0].startswith(s),
+                    NON_STATTRAK_COLLECTIONS,
+                )
+            )
+        ):
+            is_stattrak = False
+
+        market_name = get_market_name(item, prefab)
+        paintkit_name = get_paintkit_name(paintkit_value) if not is_default else None
+
+        return market_name, paintkit_name, is_stattrak, is_souvenir
+
+    def has_icon(skin_key: str) -> bool:
+        return any(icon.startswith(skin_key) for icon in item_icons)
+
+    def has_set(lootlist_key: str) -> bool:
+        for key, value in item_sets.items():
+            if lootlist_key in value["items"]:
+                return True
+        return False
+
     for item in items:
         for paintkit_key, paintkit_value in paintkits.items():
             is_default = paintkit_key in ("default", "workshop_default")
@@ -362,7 +381,7 @@ def get_skins(
 
             is_glove = item_prefab == "hands_paintable"
             is_knife = item_prefab == "melee_unusual"
-            is_weapon = item["name"].startswith("weapon")
+            is_weapon = item["name"].startswith("weapon") if not is_knife else False
 
             if is_default and is_glove:
                 continue
@@ -370,54 +389,26 @@ def get_skins(
                 continue
 
             skin_key = item["name"] if is_default else f"{item['name']}_{paintkit_key}"
+
+            if not has_icon(skin_key):
+                continue
+
             prefab = items_game["prefabs"][item_prefab]
             item_lootlist_key = f"[{paintkit_key}]{item['name']}"
-
-            if paintkit_key == "glock_chomper" and item_prefab == "weapon_glock_prefab":
-                pass
 
             all_prefabs = get_all_prefabs(item_prefab)
             item_lootlist = get_lootlist(item_lootlist_key)
 
-            if is_weapon:
-                skins = parse_weapon(item, skin_key, prefab, item_lootlist, all_prefabs)
-
-                # write skins to returned value
+            if is_weapon and not (item_lootlist or has_set(item_lootlist_key)):
                 continue
-
-            if not item_lootlist and not is_glove and not is_knife:
-                continue
-            if not item_lootlist and (is_knife or is_glove):
-                continue
-
-            is_souvenir = (
-                False if item_lootlist is None else has_souvenir(item_lootlist)
-            )
-
-            is_stattrak = "statted_item_base" in all_prefabs
 
             if (
-                item_lootlist
-                and list(item_lootlist.keys())[0] in SOUVENIR_COLLECTIONS
-                # # R8 Bone Mask has Souvenir (WTF Valve #2) and MP5-SD Lab Rat
-            ) or skin_key in ("weapon_revolver_sp_tape", "weapon_mp5sd_hy_labrat_mp5"):
-                is_souvenir = True
+                paintkit_key == "sp_tape" and is_knife
+            ):  # Bone Mask doesn't exists for knives
+                continue
 
-            if (
-                item_lootlist
-                and not is_souvenir
-                and any(
-                    map(
-                        lambda s: list(item_lootlist.keys())[0].startswith(s),
-                        NON_STATTRAK_COLLECTIONS,
-                    )
-                )
-            ):
-                is_stattrak = False
-
-            market_name = get_market_name(item, prefab)
-            paintkit_name = (
-                get_paintkit_name(paintkit_value) if not is_default else None
+            market_name, paintkit_name, is_stattrak, is_souvenir = parse_item(
+                item, skin_key, prefab, item_lootlist, all_prefabs
             )
 
             qualities = get_possible_qualities(paintkit_value)
@@ -529,6 +520,25 @@ async def add_patches_to_database(patches: set[str]):
     logger.info(f"Added [{added_count}] rows to [stickers] table")
 
 
+async def add_charms_to_database(charms: set[str]):
+    added_count = 0
+    async with get_async_session() as session:
+        current_db_charms = set(
+            (
+                await session.scalars(
+                    select(Sticker.full_name).where(Sticker.sticker_type == "charm")
+                )
+            ).all()
+        )
+        for charm in charms:
+            if charm not in current_db_charms:
+                session.add(Sticker.from_hashname("charm", charm))
+                logger.info(f"Added [{charm}] to [stickers] table")
+                added_count += 1
+
+    logger.info(f"Added [{added_count}] rows to [stickers] table")
+
+
 async def add_stickers_to_database(stickers: set[str]):
     added_count = 0
     async with get_async_session() as session:
@@ -588,6 +598,7 @@ async def add_market_items_to_database(
     viewer_passes: set,
     operation_passes: set,
     agents: dict,
+    charms: set,
 ):
     await add_skins_to_database(skins_dict)
     await add_containers_to_database(cases)
@@ -595,10 +606,11 @@ async def add_market_items_to_database(
     await add_stickers_to_database(stickers)
     await add_tools_to_database(keys, viewer_passes, operation_passes)
     await add_agents_to_database(agents)
+    await add_charms_to_database(charms)
 
 
 def save_to_file(filename: str, content: set[str]):
-    threshold, content_size = 20000, len(content)
+    threshold, content_size = 1000, len(content)
     chunks = content_size // threshold
     content_iterator = iter(content)
     if chunks == 0:
@@ -638,39 +650,40 @@ def run():
     operation_passes = get_operation_passes(csgo_english_tokens)
     tools = get_tools(csgo_english_tokens)
 
-    # # Dict is needed to write all skins to database.
-    # # Set is needed to write all hashnames to file and check for the market price.
+    # Dict is needed to write all skins to database.
+    # Set is needed to write all hashnames to file and check for the market price.
     skins_dict, skins_set = get_skins(items_game, csgo_english_tokens_lower)
-    # cases = get_cases(csgo_english_tokens)
-    #
-    patches = get_patches(items_game["sticker_kits"], csgo_english_tokens)
-    # stickers = get_stickers(csgo_english_tokens, sticker_kits)
-    # keys = get_keys(csgo_english_tokens)
+    cases = get_cases(csgo_english_tokens)
 
-    # tools = tools | keys | operation_passes | viewer_passes
+    patches = get_patches(items_game["sticker_kits"], csgo_english_tokens)
+    stickers = get_stickers(csgo_english_tokens, sticker_kits)
+    charms_set = get_charms(csgo_english_tokens, items_game)
+    keys = get_keys(csgo_english_tokens)
 
     # save_to_file("cases", cases)  # OK
     # save_to_file("agents-t", agents["t"])  # OK
     # save_to_file("agents-ct", agents["ct"])  # OK
     # save_to_file("tools", tools)  # OK
     # save_to_file("patches", patches)  # OK
-    # save_to_file("stickers", stickers) # OK
-    save_to_file("skins", skins_set)  # OK
+    # save_to_file("stickers", stickers)  # OK
+    # save_to_file("skins", skins_set)  # OK
+    # save_to_file("charms", charms_set)  # OK
 
     pass
 
-    # asyncio.run(
-    #     add_market_items_to_database(
-    #         skins_dict,
-    #         cases,
-    #         patches,
-    #         stickers,
-    #         keys,
-    #         viewer_passes,
-    #         operation_passes,
-    #         agents,
-    #     )
-    # )
+    asyncio.run(
+        add_market_items_to_database(
+            skins_dict,
+            cases,
+            patches,
+            stickers,
+            keys,
+            viewer_passes,
+            operation_passes,
+            agents,
+            charms_set,
+        )
+    )
 
 
 if __name__ == "__main__":
