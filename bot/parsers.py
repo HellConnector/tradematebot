@@ -168,7 +168,7 @@ async def parse_sticker_text(text: str, s: AsyncSession) -> List[str]:
     words = text.split()
     stickers = await s.scalars(
         select(table.full_name).filter(
-            table.sticker_type != "patch",
+            table.sticker_type.not_in(("patch", "charm")),
             and_(func.lower(table.full_name).contains(n) for n in words[1:]),
         )
     )
