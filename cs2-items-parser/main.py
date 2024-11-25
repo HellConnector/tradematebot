@@ -357,7 +357,7 @@ def get_skins(
                     NON_STATTRAK_COLLECTIONS,
                 )
             )
-        ):
+        ) or skin_key == "weapon_deagle_aq_deagle_case_hardened_2":
             is_stattrak = False
 
         market_name = get_market_name(item, prefab)
