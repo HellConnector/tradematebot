@@ -33,6 +33,9 @@ NON_STATTRAK_COLLECTIONS = (
     "set_op10_t",
     "set_train_2021",
     "set_anubis",
+    "set_realism_camo",
+    "set_overpass_2024",
+    "set_graphic_design",
 )
 
 SOUVENIR_COLLECTIONS = (
