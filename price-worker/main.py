@@ -188,8 +188,12 @@ async def get_http_proxies() -> list[str]:
     async with httpx.AsyncClient() as client:
         response = await client.get(PROXIES_URL)
 
-    return list(map(lambda x: ":".join(x.split(":")[0:2]), response.text.splitlines()))
-
+    return list(
+        map(
+            lambda x: ":".join(x.removeprefix("http://").split(":")[0:2]),
+            response.text.splitlines(),
+        )
+    )
 
 async def get_item_price(
     item: MarketItem, proxy: str, timeout: int
