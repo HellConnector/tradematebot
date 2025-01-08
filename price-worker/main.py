@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+import random
 import re
 import time
 from dataclasses import dataclass
@@ -181,6 +182,7 @@ async def get_items_from_db() -> Iterator[MarketItem]:
 
 
 def map_item_to_proxy(items: Iterator[MarketItem], proxies: list[str]):
+    random.shuffle(proxies)
     return zip(items, cycle(proxies))
 
 
