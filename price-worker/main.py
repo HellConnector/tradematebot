@@ -230,6 +230,9 @@ async def main():
         start = time.monotonic()
         proxies = await get_http_proxies()
 
+        for proxy in proxies:
+            logger.info(f"Proxy URL is -->> {proxy}")
+        
         match manager.remaining_count:
             case count if 1 <= count <= 10:
                 timeout = 5
