@@ -203,6 +203,7 @@ async def get_item_price(
         ),
     ) as client:
         try:
+            logger.info(f"Proxy URL is {proxy}")
             response = await client.get(
                 url=MARKET_URL,
                 params={
