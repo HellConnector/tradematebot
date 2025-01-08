@@ -203,7 +203,6 @@ async def get_item_price(
         ),
     ) as client:
         try:
-            logger.info(f"Proxy URL is {proxy}")
             response = await client.get(
                 url=MARKET_URL,
                 params={
@@ -229,9 +228,6 @@ async def main():
     while not manager.finished:
         start = time.monotonic()
         proxies = await get_http_proxies()
-
-        for proxy in proxies:
-            logger.info(f"Proxy URL is -->> {proxy}")
         
         match manager.remaining_count:
             case count if 1 <= count <= 10:
