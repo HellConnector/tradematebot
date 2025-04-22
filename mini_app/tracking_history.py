@@ -40,5 +40,7 @@ def split_tracking_records(
 async def get_splitted_tracking_records(
     client: Client, span: DateRange, session: AsyncSession
 ) -> dict[str, list[float]]:
-    tracking_records = await get_tracking_records_for_user(client, span.value, session)
+    tracking_records = await get_tracking_records_for_user(
+        client, span.value, session
+    )
     return split_tracking_records(tracking_records)

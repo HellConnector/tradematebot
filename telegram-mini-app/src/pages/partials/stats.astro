@@ -1,0 +1,14 @@
+---
+export const partial = true;
+const authorization = Astro.request.headers.get("Authorization");
+
+if (!authorization) {
+  return Astro.redirect("/outside-telegram/");
+}
+---
+
+<div class="stats-container">
+  <div class="under-development-message">
+    <p>This page is under development. Check back soon!</p>
+  </div>
+</div>

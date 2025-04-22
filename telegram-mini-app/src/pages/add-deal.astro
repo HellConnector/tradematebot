@@ -1,0 +1,85 @@
+---
+import AppLayout from "../layouts/AppLayout.astro";
+import { MINI_APP_API_URL } from "astro:env/server";
+import "../styles/add-deal.css";
+import "../styles/search.css";
+import { catchError } from "../utils";
+
+let queryString = "";
+let showError = false;
+let errorMessage = "";
+
+if (Astro.request.method === "POST") {
+  const [error, data] = await catchError(Astro.request.formData());
+  if (error) {
+    console.log(error);
+  } else if (data) {
+    const authorization = Astro.request.headers.get("Authorization");
+    if (!authorization) {
+      return Astro.redirect("/outside-telegram/");
+    }
+    const [error, response] = await catchError(
+      fetch(`${MINI_APP_API_URL}/portfolio/create-deal/`, {
+        headers: {
+          Authorization: authorization,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(Object.fromEntries(data.entries())),
+        method: "POST",
+      }),
+    );
+    if (error) {
+      console.log(error);
+    } else if (response.ok) {
+      return new Response(null, {
+        status: 200,
+        headers: {
+          "HX-Redirect": `/portfolio/?name=${data.get("itemName")}`,
+        },
+      });
+    } else {
+      showError = true;
+      try {
+        const responseData = await response.json();
+        errorMessage =
+          responseData.detail || "Failed to add deal. Please try again.";
+      } catch (e) {
+        errorMessage = "Failed to add deal. Please try again.";
+      }
+    }
+  }
+} else {
+  const name = Astro.url.searchParams.get("name");
+  if (name) {
+    queryString = `?name=${encodeURIComponent(name)}`;
+  }
+}
+---
+
+<AppLayout>
+  <div
+    hx-get={`/partials/add-deal/${queryString}`}
+    hx-target="main"
+    hx-swap="outerHTML"
+    hx-trigger="load"
+    hx-indicator="#main-content-skeleton"
+  >
+  </div>
+</AppLayout>
+
+<script define:vars={{ showError, errorMessage }}>
+  if (showError && errorMessage) {
+    function showErrorInTelegramPopup() {
+      if (window.app) {
+        window.app.showAlert(errorMessage);
+      } else {
+        setTimeout(showErrorInTelegramPopup, 100);
+      }
+    }
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", showErrorInTelegramPopup);
+    } else {
+      showErrorInTelegramPopup();
+    }
+  }
+</script>

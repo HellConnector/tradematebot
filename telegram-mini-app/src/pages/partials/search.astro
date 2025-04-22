@@ -1,0 +1,69 @@
+---
+import { MINI_APP_API_URL } from "astro:env/server";
+import SearchItem from "../../components/SearchItem.astro";
+import { catchError } from "../../utils";
+
+export const partial = true;
+
+const authorization = Astro.request.headers.get("Authorization");
+
+if (!authorization) {
+  return Astro.redirect("/outside-telegram/");
+}
+
+const query = Astro.url.searchParams.get("query");
+
+let searchResults = [];
+let hasError = false;
+let errorMessage = "";
+
+if (!query || query.length < 3) {
+  Astro.response.status = 200;
+} else {
+  const [error, data] = await catchError(
+    fetch(`${MINI_APP_API_URL}/search/?query=${query}`, {
+      headers: {
+        Authorization: authorization,
+      },
+    }).then((response) => response.json()),
+  );
+  if (data.detail) {
+    hasError = true;
+    errorMessage = data.detail;
+  } else {
+    searchResults = data || [];
+  }
+}
+---
+
+{
+  query && query.length < 3 && (
+    <div class="search-item">
+      <span>Enter at least 3 characters to search</span>
+    </div>
+  )
+}
+
+{
+  hasError && (
+    <div class="search-item">
+      <span>Error: {errorMessage}</span>
+    </div>
+  )
+}
+
+{
+  !hasError && searchResults.length === 0 && query && query.length >= 3 && (
+    <div class="search-item">
+      <span>No items found</span>
+    </div>
+  )
+}
+
+{
+  !hasError &&
+    searchResults.length > 0 &&
+    searchResults.map((item) => (
+      <SearchItem name={item.name} imageUrl={item.imageUrl} />
+    ))
+}

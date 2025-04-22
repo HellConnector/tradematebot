@@ -1,0 +1,28 @@
+.stats-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 70vh;
+    padding: 1rem;
+}
+
+.under-development-message {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: var(--tg-spacing-lg, 1.5rem);
+    background-color: var(--tg-theme-secondary-bg-color);
+    border-radius: var(--tg-border-radius, 0.5rem);
+    text-align: center;
+    z-index: 10;
+    position: relative;
+    max-width: 80%;
+}
+
+.under-development-message p {
+    color: var(--tg-theme-hint-color);
+    font-size: var(--tg-font-size-md, 1rem);
+    margin: 0;
+    line-height: 1.5;
+}

@@ -1,10 +1,9 @@
 ARG PYTHON_VERSION=3.11-slim-buster
 
 FROM python:${PYTHON_VERSION} as builder
-ARG POETRY_VERSION=1.8.2
+ARG POETRY_VERSION=1.8.5
 
-RUN pip install --upgrade pip
-RUN pip install poetry==${POETRY_VERSION}
+RUN pip install --upgrade pip && pip install poetry==${POETRY_VERSION}
 
 ENV POETRY_NO_INTERACTION=1 \
     POETRY_VIRTUALENVS_IN_PROJECT=1 \
@@ -28,6 +27,8 @@ COPY bot ./app/bot
 COPY cs2-items-parser ./app/cs2-items-parser
 COPY price-worker ./app/price-worker
 COPY mini_app ./app/mini_app
+COPY search-items-worker ./app/search-items-worker
+COPY mini_app_api ./app/mini_app_api
 
 ENV PYTHONBUFFERED 1
 ENV PYTHONOPTIMIZE 1

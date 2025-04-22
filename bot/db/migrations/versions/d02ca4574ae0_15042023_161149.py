@@ -1,10 +1,11 @@
 """init
 
 Revision ID: d02ca4574ae0
-Revises: 
+Revises:
 Create Date: 2023-04-15 16:11:49.301407
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 
@@ -38,8 +39,12 @@ def upgrade() -> None:
         sa.Column("lang", sa.String(), nullable=True),
         sa.PrimaryKeyConstraint("id", "chat_id"),
     )
-    op.create_index(op.f("ix_clients_chat_id"), "clients", ["chat_id"], unique=True)
-    op.create_index(op.f("ix_clients_currency"), "clients", ["currency"], unique=False)
+    op.create_index(
+        op.f("ix_clients_chat_id"), "clients", ["chat_id"], unique=True
+    )
+    op.create_index(
+        op.f("ix_clients_currency"), "clients", ["currency"], unique=False
+    )
     op.create_index(op.f("ix_clients_id"), "clients", ["id"], unique=True)
     op.create_index(op.f("ix_clients_name"), "clients", ["name"], unique=False)
     op.create_table(
@@ -49,8 +54,12 @@ def upgrade() -> None:
         sa.Column("name", sa.String(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(op.f("ix_containers_id"), "containers", ["id"], unique=True)
-    op.create_index(op.f("ix_containers_name"), "containers", ["name"], unique=False)
+    op.create_index(
+        op.f("ix_containers_id"), "containers", ["id"], unique=True
+    )
+    op.create_index(
+        op.f("ix_containers_name"), "containers", ["name"], unique=False
+    )
     op.create_table(
         "price_limits",
         sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
@@ -60,9 +69,14 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(
-        op.f("ix_price_limits_currency"), "price_limits", ["currency"], unique=True
+        op.f("ix_price_limits_currency"),
+        "price_limits",
+        ["currency"],
+        unique=True,
     )
-    op.create_index(op.f("ix_price_limits_id"), "price_limits", ["id"], unique=True)
+    op.create_index(
+        op.f("ix_price_limits_id"), "price_limits", ["id"], unique=True
+    )
     op.create_table(
         "prices",
         sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
@@ -73,7 +87,9 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id", "name", "currency"),
         sa.UniqueConstraint("name", "currency", name="_name_currency_uc"),
     )
-    op.create_index(op.f("ix_prices_currency"), "prices", ["currency"], unique=False)
+    op.create_index(
+        op.f("ix_prices_currency"), "prices", ["currency"], unique=False
+    )
     op.create_index(op.f("ix_prices_id"), "prices", ["id"], unique=True)
     op.create_index(op.f("ix_prices_name"), "prices", ["name"], unique=False)
     op.create_table(
@@ -93,12 +109,18 @@ def upgrade() -> None:
         sa.Column("sv", sa.Boolean(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(op.f("ix_skins_collection"), "skins", ["collection"], unique=False)
-    op.create_index(op.f("ix_skins_full_name"), "skins", ["full_name"], unique=False)
+    op.create_index(
+        op.f("ix_skins_collection"), "skins", ["collection"], unique=False
+    )
+    op.create_index(
+        op.f("ix_skins_full_name"), "skins", ["full_name"], unique=False
+    )
     op.create_index(op.f("ix_skins_id"), "skins", ["id"], unique=True)
     op.create_index(op.f("ix_skins_name"), "skins", ["name"], unique=False)
     op.create_index(op.f("ix_skins_skin"), "skins", ["skin"], unique=False)
-    op.create_index(op.f("ix_skins_skin_type"), "skins", ["skin_type"], unique=False)
+    op.create_index(
+        op.f("ix_skins_skin_type"), "skins", ["skin_type"], unique=False
+    )
     op.create_table(
         "stickers",
         sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
@@ -113,9 +135,14 @@ def upgrade() -> None:
         op.f("ix_stickers_full_name"), "stickers", ["full_name"], unique=False
     )
     op.create_index(op.f("ix_stickers_id"), "stickers", ["id"], unique=True)
-    op.create_index(op.f("ix_stickers_name"), "stickers", ["name"], unique=False)
     op.create_index(
-        op.f("ix_stickers_sticker_type"), "stickers", ["sticker_type"], unique=False
+        op.f("ix_stickers_name"), "stickers", ["name"], unique=False
+    )
+    op.create_index(
+        op.f("ix_stickers_sticker_type"),
+        "stickers",
+        ["sticker_type"],
+        unique=False,
     )
     op.create_table(
         "tools",
@@ -145,7 +172,9 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id", "name"),
         sa.UniqueConstraint("id"),
     )
-    op.create_index(op.f("ix_items_client_id"), "items", ["client_id"], unique=False)
+    op.create_index(
+        op.f("ix_items_client_id"), "items", ["client_id"], unique=False
+    )
     op.create_index(op.f("ix_items_name"), "items", ["name"], unique=False)
     op.create_table(
         "deals",
@@ -169,12 +198,21 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("id"),
     )
-    op.create_index(op.f("ix_deals_client_id"), "deals", ["client_id"], unique=False)
     op.create_index(
-        op.f("ix_deals_deal_currency"), "deals", ["deal_currency"], unique=False
+        op.f("ix_deals_client_id"), "deals", ["client_id"], unique=False
     )
-    op.create_index(op.f("ix_deals_deal_type"), "deals", ["deal_type"], unique=False)
-    op.create_index(op.f("ix_deals_item_id"), "deals", ["item_id"], unique=False)
+    op.create_index(
+        op.f("ix_deals_deal_currency"),
+        "deals",
+        ["deal_currency"],
+        unique=False,
+    )
+    op.create_index(
+        op.f("ix_deals_deal_type"), "deals", ["deal_type"], unique=False
+    )
+    op.create_index(
+        op.f("ix_deals_item_id"), "deals", ["item_id"], unique=False
+    )
     # ### end Alembic commands ###
 
 

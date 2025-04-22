@@ -1,0 +1,165 @@
+:root {
+    --tg-theme-bg-color: #fff;
+    --tg-theme-text-color: #000;
+    --tg-theme-hint-color: #999;
+    --tg-theme-link-color: #2481cc;
+    --tg-theme-button-color: #2481cc;
+    --tg-theme-button-text-color: #fff;
+    --tg-theme-secondary-bg-color: #f0f0f0;
+    --tg-theme-bg-color: var(--telegram-bg-color, #fff);
+    --tg-theme-text-color: var(--telegram-text-color, #000);
+    --tg-theme-hint-color: var(--telegram-hint-color, #999);
+    --tg-theme-link-color: var(--telegram-link-color, #2481cc);
+    --tg-theme-button-color: var(--telegram-button-color, #2481cc);
+    --tg-theme-button-text-color: var(--telegram-button-text-color, #fff);
+    --tg-theme-secondary-bg-color: var(--telegram-secondary-bg-color, #f0f0f0);
+    --tg-animation-duration: .2s;
+    --tg-border-radius: 8px;
+    --tg-spacing-sm: 6px;
+    --tg-spacing-md: 12px;
+    --tg-spacing-lg: 20px;
+    --tg-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    --tg-font-size-xs: 10px;
+    --tg-font-size-sm: 12px;
+    --tg-font-size-md: 14px;
+    --tg-font-size-lg: 16px;
+    --tg-font-size-xl: 18px;
+    --tg-scrollbar-color: #0003;
+    --tg-scrollbar-color-dark: #fff3;
+    --tg-color-positive: #31b545;
+    --tg-color-negative: #e53835;
+    --header-height: 85px;
+}
+
+html {
+    font-family: var(--tg-font-family);
+    margin: 0;
+    padding: 0;
+    background-color: var(--tg-theme-bg-color);
+    color: var(--tg-theme-text-color);
+    height: 100%;
+    width: 100%;
+    overflow-y: scroll;
+    scrollbar-gutter: stable;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: var(--tg-scrollbar-color) transparent
+}
+
+::-webkit-scrollbar {
+    width: 8px
+}
+
+::-webkit-scrollbar-track {
+    background: transparent
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: var(--tg-scrollbar-color);
+    border-radius: 4px
+}
+
+@media (prefers-color-scheme: dark) {
+    ::-webkit-scrollbar-thumb {
+        background-color: var(--tg-scrollbar-color-dark)
+    }
+
+    html, .modal-container, #drawer-content {
+        scrollbar-color: var(--tg-scrollbar-color-dark) transparent
+    }
+
+    :root {
+        --tg-scrollbar-color: var(--tg-scrollbar-color-dark)
+    }
+}
+
+body {
+    font-family: var(--tg-font-family);
+    margin: 0;
+    padding: 0;
+    background-color: var(--tg-theme-bg-color);
+    color: var(--tg-theme-text-color);
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh
+}
+
+a {
+    color: var(--tg-theme-link-color);
+    text-decoration: none
+}
+
+button, .button {
+    background-color: var(--tg-theme-button-color);
+    color: var(--tg-theme-button-text-color);
+    border: none;
+    border-radius: var(--tg-border-radius);
+    padding: 10px 16px;
+    font-size: var(--tg-font-size-md);
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity .2s
+}
+
+button:hover, .button:hover {
+    opacity: .9
+}
+
+button:active, .button:active {
+    opacity: .8
+}
+
+button.secondary, .button.secondary {
+    background-color: var(--tg-theme-secondary-bg-color);
+    color: var(--tg-theme-text-color)
+}
+
+main {
+    padding: var(--tg-spacing-sm);
+    flex: 1
+}
+
+.main-container {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--tg-spacing-md);
+    /*padding-bottom: 60px*/
+}
+
+.htmx-indicator {
+    display: none
+}
+
+.htmx-request .htmx-indicator {
+    display: block
+}
+
+.htmx-request.htmx-indicator {
+    display: block
+}
+
+.htmx-settling main, .htmx-request main {
+    opacity: .7;
+    transition: opacity var(--tg-animation-duration) ease-in-out
+}
+
+.search-item {
+    transition: opacity var(--tg-animation-duration) ease-in-out
+}
+
+.htmx-settling .search-item, .htmx-request .search-item {
+    opacity: .7
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--tg-theme-button-color)
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--tg-theme-text-color);
+    margin-top: 0
+}

@@ -1,0 +1,28 @@
+---
+import "../styles/global.css";
+import MainContentSkeleton from "../components/MainContentSkeleton.astro";
+---
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no, height=device-height"
+    />
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>TradeMateBot</title>
+    <script is:inline src="/telegram-web-app.js"></script>
+    <script src="../scripts/mini-app-init.js"></script>
+  </head>
+  <body hx-boost="true">
+    <main class="main-container">
+      <slot />
+    </main>
+    <MainContentSkeleton />
+  </body>
+</html>

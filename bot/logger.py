@@ -1,6 +1,8 @@
 import logging
 
-log_format = "%(asctime)s - %(name)s - %(levelname)s - %(module)s - %(message)s"
+log_format = (
+    "%(asctime)s - %(name)s - %(levelname)s - %(module)s - %(message)s"
+)
 
 formatter = logging.Formatter(fmt=log_format)
 

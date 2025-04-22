@@ -1,0 +1,23 @@
+{
+  "name": "telegram-mini-app",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "NODE_TLS_REJECT_UNAUTHORIZED=0 astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^12.5.0",
+    "astro": "^5.7.4",
+    "astro-htmx": "^1.0.6",
+    "htmx.org": "2.0.4"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3",
+    "prettier-plugin-astro": "^0.14.1",
+    "vite-plugin-mkcert": "^1.17.8",
+    "wrangler": "^4.12.0"
+  }
+}

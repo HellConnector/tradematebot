@@ -34,7 +34,11 @@ from bot import (
     utils,
 )
 from bot.db import Client, Deal, Item
-from bot.jobs import update_price_limits, send_notifications, update_tracking_records
+from bot.jobs import (
+    update_price_limits,
+    send_notifications,
+    update_tracking_records,
+)
 from bot.logger import log
 
 filterwarnings(
@@ -107,7 +111,9 @@ async def update_currency(
             messages.currency_update[client.lang].format(currency=currency)
         )
     else:
-        await query.edit_message_text(messages.cannot_change_currency[client.lang])
+        await query.edit_message_text(
+            messages.cannot_change_currency[client.lang]
+        )
 
 
 @utils.inject_db_session_and_client
@@ -128,7 +134,9 @@ async def update_lang(
             text, reply_markup=utils.get_inline_markup(constants.CURRENCY)
         )
     else:
-        await query.edit_message_text(messages.lang_update[lang].format(lang=lang))
+        await query.edit_message_text(
+            messages.lang_update[lang].format(lang=lang)
+        )
 
 
 @utils.inject_db_session_and_client
@@ -163,7 +171,9 @@ async def wipeout(
     else:
         await user.send_message(
             messages.wipeout_message[client.lang],
-            reply_markup=utils.get_inline_markup(buttons=("Yes", "No"), rows=1),
+            reply_markup=utils.get_inline_markup(
+                buttons=("Yes", "No"), rows=1
+            ),
         )
 
 
@@ -178,7 +188,9 @@ async def wipeout_yes(
     query = update.callback_query
     await query.edit_message_text(
         messages.wipeout_yes[client.lang],
-        reply_markup=utils.get_inline_markup(buttons=("Yes, i am sure", "NO"), rows=1),
+        reply_markup=utils.get_inline_markup(
+            buttons=("Yes, i am sure", "NO"), rows=1
+        ),
     )
 
 
@@ -276,11 +288,13 @@ def run():
 
     choose_currency_handler = CommandHandler("setcurrency", choose_currency)
     update_currency_handler = CallbackQueryHandler(
-        update_currency, pattern=rf'^({"|".join(constants.CURRENCY)})$'
+        update_currency, pattern=rf"^({'|'.join(constants.CURRENCY)})$"
     )
 
     choose_lang_handler = CommandHandler("setlang", choose_lang)
-    update_lang_handler = CallbackQueryHandler(update_lang, pattern=r"^(RU|EN)$")
+    update_lang_handler = CallbackQueryHandler(
+        update_lang, pattern=r"^(RU|EN)$"
+    )
 
     conv_handler = ConversationHandler(
         name="conv_handler",
@@ -288,31 +302,43 @@ def run():
         states={
             utils.State.MAIN_MENU: [
                 CallbackQueryHandler(menu.deals, pattern=r"^Deals$"),
-                CallbackQueryHandler(menu.notifications, pattern=r"^Notifications$"),
+                CallbackQueryHandler(
+                    menu.notifications, pattern=r"^Notifications$"
+                ),
             ],
             utils.State.DEALS: [
-                CallbackQueryHandler(deals.set_deal_type, pattern=r"^(Buy|Sell)$")
+                CallbackQueryHandler(
+                    deals.set_deal_type, pattern=r"^(Buy|Sell)$"
+                )
             ],
             utils.State.ITEMS: [
                 *skin_handlers,
                 MessageHandler(
-                    filters.Regex(utils.selected_item_pattern), deals.selected_item
+                    filters.Regex(utils.selected_item_pattern),
+                    deals.selected_item,
                 ),
-                MessageHandler(filters.Regex(utils.cp_pattern), deals.item_count_price),
-                MessageHandler(filters.Regex(r"(?!menu\b)\b\w+"), deals.unknown_query),
+                MessageHandler(
+                    filters.Regex(utils.cp_pattern), deals.item_count_price
+                ),
+                MessageHandler(
+                    filters.Regex(r"(?!menu\b)\b\w+"), deals.unknown_query
+                ),
             ],
             utils.State.NOTIFICATIONS: [
                 CallbackQueryHandler(
                     notifications.show_items,
-                    pattern=rf'^({"|".join(constants.NOTIFY_TYPES)})$',
+                    pattern=rf"^({'|'.join(constants.NOTIFY_TYPES)})$",
                 ),
                 CallbackQueryHandler(
                     notifications.change_page, pattern=r"^(<<<|>>>){1}$"
                 ),
-                CallbackQueryHandler(notifications.choose_item, pattern=r"^[0-7]{1}$"),
+                CallbackQueryHandler(
+                    notifications.choose_item, pattern=r"^[0-7]{1}$"
+                ),
                 CallbackQueryHandler(notifications.cancel, pattern=r"Cancel"),
                 MessageHandler(
-                    filters.Regex(utils.notify_pattern), notifications.take_profit
+                    filters.Regex(utils.notify_pattern),
+                    notifications.take_profit,
                 ),
             ],
         },
@@ -324,7 +350,9 @@ def run():
     bot.add_handler(CommandHandler("wipeout", wipeout))
     bot.add_handler(CallbackQueryHandler(wipeout_yes, pattern=r"^Yes$"))
     bot.add_handler(CallbackQueryHandler(wipeout_no, pattern=r"^(No|NO){1}$"))
-    bot.add_handler(CallbackQueryHandler(wipeout_sure, pattern=r"^Yes, i am sure$"))
+    bot.add_handler(
+        CallbackQueryHandler(wipeout_sure, pattern=r"^Yes, i am sure$")
+    )
     bot.add_handler(choose_currency_handler)
     bot.add_handler(choose_lang_handler)
     bot.add_handler(update_currency_handler)

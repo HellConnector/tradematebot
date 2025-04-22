@@ -1,0 +1,427 @@
+---
+import { MINI_APP_API_URL } from "astro:env/server";
+import { catchError } from "../../utils";
+
+export const partial = true;
+const authorization = Astro.request.headers.get("Authorization");
+
+if (!authorization) {
+  return Astro.redirect("/outside-telegram/");
+}
+
+const headers = {
+  Authorization: authorization,
+};
+
+const name = Astro.url.searchParams.get("name");
+let itemName = null;
+let imageUrl = null;
+let hasItemDetails = false;
+let authorized = false;
+let settings = {
+  lang: "EN",
+  currency: "$",
+};
+
+if (name && authorization) {
+  const [itemDetailsPromise, settingsPromise] = [
+    fetch(`${MINI_APP_API_URL}/search/${encodeURIComponent(name)}/`, {
+      headers: headers,
+    }),
+    fetch(`${MINI_APP_API_URL}/profile/settings/`, {
+      headers: headers,
+    }),
+  ];
+
+  const [[itemError, itemResponse], [settingsError, settingsResponse]] =
+    await Promise.all([
+      catchError(itemDetailsPromise),
+      catchError(settingsPromise),
+    ]);
+
+  let settingsOk = false;
+  if (settingsError || !settingsResponse.ok) {
+    console.error(
+      "Error fetching user settings:",
+      settingsError || "Response not OK",
+    );
+  } else {
+    try {
+      settings = await settingsResponse.json();
+      settingsOk = true;
+    } catch (e) {
+      console.error("Failed to parse settings data:", e);
+    }
+  }
+
+  let itemOk = false;
+  if (itemError) {
+    console.error("Error fetching item details:", itemError);
+  } else if (itemResponse.ok) {
+    const [parseError, data] = await catchError(itemResponse.json());
+
+    if (parseError) {
+      console.error("Error parsing item details:", parseError);
+    } else {
+      itemName = data.name;
+      imageUrl = data.imageUrl;
+      hasItemDetails = true;
+      itemOk = true;
+    }
+  }
+
+  authorized = settingsOk || itemOk;
+} else {
+  const [error, settingsResponse] = await catchError(
+    fetch(`${MINI_APP_API_URL}/profile/settings/`, {
+      headers: {
+        Authorization: authorization,
+      },
+    }),
+  );
+  if (error || !settingsResponse.ok) {
+    console.error("Error fetching user settings:", error || "Response not OK");
+  } else {
+    try {
+      settings = await settingsResponse.json();
+      authorized = true;
+    } catch (e) {
+      console.error("Failed to parse settings data:", e);
+    }
+  }
+}
+---
+
+{
+  !authorized ? (
+    <div class="error-message">YOU ARE OUTSIDE OF TELEGRAM</div>
+  ) : (
+    <>
+      <form id="add-deal-form" class="add-deal-page" method="POST">
+        <div class="search-input-container">
+          <input
+            type="text"
+            id="deal-search"
+            name="query"
+            class="telegram-search-input"
+            placeholder="Search item..."
+            hx-get="/partials/search/"
+            hx-trigger="input changed delay:500ms"
+            hx-target="#deal-search-results"
+          />
+          <div class="search-icon">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </div>
+          <div class="clear-icon" id="deal-clear-search" style="display: none;">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </div>
+        </div>
+        <div id="deal-search-results" class="deals-list" />
+        <div
+          id="selected-item-container"
+          class="selected-item-container"
+          style={hasItemDetails ? "display: block;" : "display: none;"}
+        >
+          <div class="selected-item-header">
+            <div class="selected-item-label">Selected Item</div>
+            <button
+              type="button"
+              id="clear-selected-item"
+              class="clear-selected-item"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+          <div id="selected-item" class="selected-item">
+            <img
+              id="selected-item-image"
+              src={imageUrl || ""}
+              alt={itemName || ""}
+            />
+            <span id="selected-item-name">{itemName || ""}</span>
+          </div>
+          {hasItemDetails && (
+            <input
+              type="hidden"
+              id="selected-item-name-input"
+              name="itemName"
+              value={itemName}
+            />
+          )}
+        </div>
+        <div class="deal-type-container">
+          <div class="deal-type-label">Deal Type</div>
+          <div class="radio-container">
+            <div class="radio-option">
+              <input
+                type="radio"
+                id="deal-type-buy"
+                name="dealType"
+                value="Buy"
+                checked
+              />
+              <label for="deal-type-buy">Buy</label>
+            </div>
+            <div class="radio-option">
+              <input
+                type="radio"
+                id="deal-type-sell"
+                name="dealType"
+                value="Sell"
+              />
+              <label for="deal-type-sell">Sell</label>
+            </div>
+          </div>
+        </div>
+        <div class="deal-input-container">
+          <div class="deal-input-field">
+            <label for="deal-price">Price, {settings.currency}</label>
+            <input
+              type="number"
+              id="deal-price"
+              name="dealPrice"
+              min="0.01"
+              step="0.01"
+              placeholder="0.01"
+              inputmode="decimal"
+              required
+            />
+          </div>
+          <div class="deal-input-field">
+            <label for="deal-volume">Quantity</label>
+            <input
+              type="number"
+              id="deal-volume"
+              name="dealVolume"
+              min="1"
+              step="1"
+              placeholder="1"
+              inputmode="numeric"
+              required
+            />
+          </div>
+        </div>
+      </form>
+    </>
+  )
+}
+
+<script>
+  // Set up back button
+  window.app.BackButton.show();
+  window.app.BackButton.onClick(() => {
+    window.app.BackButton.hide();
+    window.location.href = "/portfolio/";
+  });
+
+  // Configure MainButton for form submission
+  const mainButton = window.app.MainButton;
+  mainButton.setText("Add");
+  mainButton.color = "rgb(49, 181, 69)";
+  mainButton.hasShineEffect = true;
+  mainButton.show();
+
+  // Configure SecondaryButton for cancel action
+  const secondaryButton = window.app.SecondaryButton;
+  secondaryButton.setText("Cancel");
+  secondaryButton.textColor = window.app.themeParams.destructive_text_color;
+  secondaryButton.show();
+
+  // Set up SecondaryButton click handler to navigate to portfolio
+  secondaryButton.onClick(() => {
+    window.location.href = "/portfolio/";
+  });
+
+  // Set up MainButton click handler to submit the form
+  mainButton.onClick(() => {
+    const selectedItemName = document.getElementById("selected-item-name");
+    const dealType = document.querySelector(
+      'input[name="dealType"]:checked',
+    ) as HTMLInputElement;
+    const priceInput = document.getElementById(
+      "deal-price",
+    ) as HTMLInputElement;
+    const volumeInput = document.getElementById(
+      "deal-volume",
+    ) as HTMLInputElement;
+
+    // Validate required fields
+    if (!selectedItemName || !selectedItemName.textContent) {
+      window.app.showAlert("Please select an item");
+      return;
+    }
+
+    if (!priceInput.value || parseFloat(priceInput.value) < 0.01) {
+      window.app.showAlert("Price must be at least 0.01");
+      return;
+    }
+
+    if (!volumeInput.value || parseInt(volumeInput.value) < 1) {
+      window.app.showAlert("Quantity must be at least 1");
+      return;
+    }
+
+    window.app.showConfirm(
+      "Are you sure? After confirmation, you will be redirected to the portfolio page, filtered by the item you added.",
+      window.confirmFormSubmission,
+    );
+  });
+
+  window.confirmFormSubmission = function (isOk: boolean) {
+    if (isOk) {
+      const form = document.getElementById("add-deal-form");
+      (document.getElementById("deal-search") as HTMLInputElement).disabled =
+        true;
+      const submitEvent = new Event("submit");
+      form?.dispatchEvent(submitEvent);
+    }
+  };
+
+  // Handle search input clear button
+  const searchInput = document.getElementById(
+    "deal-search",
+  ) as HTMLInputElement;
+  const clearButton = document.getElementById("deal-clear-search");
+
+  if (searchInput && clearButton) {
+    searchInput.addEventListener("input", () => {
+      if (searchInput.value.trim() !== "") {
+        clearButton.style.display = "flex";
+      } else {
+        clearButton.style.display = "none";
+      }
+    });
+
+    clearButton.addEventListener("click", () => {
+      searchInput.value = "";
+      clearButton.style.display = "none";
+      // Trigger the search to clear results
+      searchInput.dispatchEvent(new Event("input"));
+    });
+  }
+
+  window.selectSearchItem = function (element) {
+    // Get the item name and image URL from the clicked element
+    const itemName = element.querySelector("span").textContent;
+    const itemImage = element.querySelector("img").src;
+
+    // Get the search input and clear button
+    const searchInput = document.getElementById("deal-search");
+    const clearButton = document.getElementById("deal-clear-search");
+    const searchResults = document.getElementById("deal-search-results");
+    const selectedItemContainer = document.getElementById(
+      "selected-item-container",
+    );
+    const selectedItemImage = document.getElementById("selected-item-image");
+    const selectedItemName = document.getElementById("selected-item-name");
+
+    if (searchInput && clearButton) {
+      const hxTrigger = searchInput.getAttribute("hx-trigger");
+      searchInput.removeAttribute("hx-trigger");
+
+      searchInput.value = "";
+      clearButton.style.display = "none";
+
+      if (searchResults) {
+        searchResults.innerHTML = "";
+      }
+
+      setTimeout(() => {
+        searchInput.setAttribute("hx-trigger", hxTrigger);
+      }, 100);
+    }
+
+    // Display the selected item
+    if (selectedItemContainer && selectedItemImage && selectedItemName) {
+      selectedItemImage.src = itemImage;
+      selectedItemImage.alt = itemName;
+      selectedItemName.textContent = itemName;
+      selectedItemContainer.style.display = "block";
+
+      // Create a hidden input to store the selected item name for form submission
+      let hiddenInput = document.getElementById("selected-item-name-input");
+      if (!hiddenInput) {
+        hiddenInput = document.createElement("input");
+        hiddenInput.type = "hidden";
+        hiddenInput.id = "selected-item-name-input";
+        hiddenInput.name = "itemName";
+        document.querySelector(".add-deal-page")?.appendChild(hiddenInput);
+      }
+      hiddenInput.value = itemName;
+    }
+  };
+
+  const clearSelectedItemButton = document.getElementById(
+    "clear-selected-item",
+  );
+  if (clearSelectedItemButton) {
+    clearSelectedItemButton.addEventListener("click", () => {
+      const selectedItemContainer = document.getElementById(
+        "selected-item-container",
+      );
+      const searchInput = document.getElementById("deal-search");
+      const hiddenInput = document.getElementById("selected-item-name-input");
+      const selectedItemName = document.getElementById("selected-item-name");
+      const searchContainer = searchInput ? searchInput.parentElement : null;
+
+      if (selectedItemContainer) {
+        selectedItemContainer.style.display = "none";
+      }
+
+      if (hiddenInput) {
+        hiddenInput.remove();
+      }
+
+      if (selectedItemName) {
+        selectedItemName.textContent = "";
+      }
+
+      if (searchContainer) {
+        searchContainer.style.display = "block";
+      }
+
+      if (searchInput) {
+        searchInput.focus();
+      }
+    });
+  }
+</script>

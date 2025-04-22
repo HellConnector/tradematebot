@@ -11,7 +11,9 @@ def run():
     alembic.parser.formatter_class = argparse.ArgumentDefaultsHelpFormatter
     options = alembic.parser.parse_args()
 
-    config = Config(file_=options.config, ini_section=options.name, cmd_opts=options)
+    config = Config(
+        file_=options.config, ini_section=options.name, cmd_opts=options
+    )
     alembic.run_cmd(config, options)
     exit()
 

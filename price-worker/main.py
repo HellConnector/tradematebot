@@ -129,7 +129,8 @@ class ItemPriceManager:
     @property
     def finished(self) -> bool:
         return all(
-            (item.has_price or item.success_no_price) for item in self.items.values()
+            (item.has_price or item.success_no_price)
+            for item in self.items.values()
         )
 
     @property
@@ -197,6 +198,7 @@ async def get_http_proxies() -> list[str]:
         )
     )
 
+
 async def get_item_price(
     item: MarketItem, proxy: str, timeout: int
 ) -> MarketItem | None:
@@ -234,7 +236,7 @@ async def main():
     while not manager.finished:
         start = time.monotonic()
         proxies = await get_http_proxies()
-        
+
         match manager.remaining_count:
             case count if 1 <= count <= 10:
                 timeout = 5
@@ -246,7 +248,12 @@ async def main():
         tasks = (
             get_item_price(*item_proxy, timeout=timeout)
             for item_proxy in map_item_to_proxy(
-                chain(*(manager.items_without_price for _ in range(REQUESTS_PER_ITEM))),
+                chain(
+                    *(
+                        manager.items_without_price
+                        for _ in range(REQUESTS_PER_ITEM)
+                    )
+                ),
                 proxies,
             )
         )
@@ -280,14 +287,18 @@ async def main():
                 await session.commit()
                 logger.info(item)
         stop = time.monotonic()
-        logger.info(f"Iteration completed in {stop-start:.2f}s")
+        logger.info(f"Iteration completed in {stop - start:.2f}s")
         manager.show_progress()
-    logger.info(f"---------------------------SUMMARY---------------------------")
+    logger.info(
+        "----------------------------SUMMARY----------------------------"
+    )
     logger.info(f"Has price -> {manager.success_count} items")
     logger.info(f"Doesn't have price -> {manager.remaining_count} items")
     for item in filter(lambda i: i.success_no_price, manager.items.values()):
         logger.info(item)
-    logger.info(f"---------------------------SUMMARY---------------------------")
+    logger.info(
+        "----------------------------SUMMARY----------------------------"
+    )
 
 
 def run():

@@ -1,0 +1,151 @@
+---
+interface Props {
+  name: string;
+  count: number;
+  imageUrl: string;
+  buyPrice: number;
+  currentPrice: number;
+  currency: string;
+  incomePercentage: number;
+  incomeAmount: number;
+  style?: string;
+}
+const {
+  name,
+  count,
+  imageUrl,
+  buyPrice,
+  currentPrice,
+  currency,
+  incomePercentage,
+  incomeAmount,
+  style = "",
+} = Astro.props;
+---
+
+<div class="portfolio-item" style={style}>
+  <div class="item-header">
+    <h3
+      hx-get=`/partials/portfolio-item/${encodeURIComponent(name)}`
+      hx-target="#item-details-container"
+      hx-trigger="click"
+      hx-indicator="#drawer-skeleton"
+      hx-swap="transition:false"
+      hx-on:click="showDrawer()"
+      class="clickable-item-name"
+    >
+      {name}
+    </h3>
+    <div class={`item-quantity-badge ${count < 10 ? "single-digit" : ""}`}>
+      {count}
+    </div>
+  </div>
+  <div class="item-details">
+    <div class="item-image-container">
+      <img class="item-image" src={imageUrl} alt={name} />
+    </div>
+    <div class="item-price-info">
+      <div class="item-detail">
+        <span class="detail-label">Buy Price:</span>
+        <span class="detail-value detail-value-custom"
+          >{buyPrice} {currency}</span
+        >
+      </div>
+      <div class="item-detail">
+        <span class="detail-label">Current Price:</span>
+        <span class="detail-value detail-value-custom"
+          >{currentPrice} {currency}</span
+        >
+      </div>
+    </div>
+    <div class="item-profit-info">
+      <div class="item-detail">
+        <span class="detail-label">Profit %:</span>
+        <span
+          class={`detail-value detail-value-custom ${incomePercentage >= 0 ? "profit-positive" : "profit-negative"}`}
+        >
+          {incomePercentage >= 0 ? "+" : ""}{incomePercentage}%
+        </span>
+      </div>
+      <div class="item-detail">
+        <span class="detail-label">Profit:</span>
+        <span
+          class={`detail-value detail-value-custom ${incomeAmount >= 0 ? "profit-positive" : "profit-negative"}`}
+        >
+          {incomeAmount >= 0 ? "+" : ""}{incomeAmount}
+          {currency}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  window.showDrawer = function () {
+    // Always reset the drawer content scroll position to top
+    const drawerContent = document.getElementById("drawer-content");
+    if (drawerContent) {
+      drawerContent.scrollTop = 0;
+    }
+
+    const drawer = document.getElementById("drawer");
+
+    // Show the drawer if it's not already open
+    if (!drawer?.classList.contains("open")) {
+      // Save the current scroll position
+      const scrollY = window.scrollY;
+
+      // Apply a fixed position to the body to prevent scrolling
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = "100%";
+
+      // Store the scroll position to restore it later
+      document.body.dataset.scrollY = scrollY;
+
+      drawer?.classList.add("open");
+      document.getElementById("overlay")?.classList.add("active");
+      if (window.app.isVerticalSwipesEnabled) {
+        window.app.disableVerticalSwipes();
+      }
+    }
+    // Always update the secondary button
+    window.app.SecondaryButton.setText("Hide");
+    window.app.SecondaryButton.onClick(window.hideDrawer);
+    if (!window.app.SecondaryButton.isVisible) {
+      window.app.SecondaryButton.show();
+    }
+  };
+
+  window.hideDrawer = function () {
+    // Blur any active input elements to close the mobile keyboard
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
+    if (window.app.SecondaryButton.isVisible) {
+      window.app.SecondaryButton.hide();
+    }
+    document.getElementById("drawer")?.classList.remove("open");
+    document.getElementById("overlay")?.classList.remove("active");
+
+    // Restore scrolling
+    const scrollY = document.body.dataset.scrollY;
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.width = "";
+    window.scrollTo(0, parseInt(scrollY || "0"));
+
+    // Only enable vertical swipes if the add deal drawer is not open
+    if (!window.app.isVerticalSwipesEnabled) {
+      window.app.enableVerticalSwipes();
+    }
+
+    // Reset the MainButton to its default behavior
+    window.app.MainButton.offClick();
+    window.app.MainButton.setText("Add deal");
+    window.app.MainButton.onClick(() => {
+      window.location.href = "/add-deal/";
+    });
+  };
+</script>
