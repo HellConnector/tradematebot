@@ -1,11 +1,12 @@
 ---
-import { MINI_APP_API_URL } from "astro:env/server";
 import SearchItem from "../../components/SearchItem.astro";
 import { catchError } from "../../utils";
 
 export const partial = true;
 
 const authorization = Astro.request.headers.get("Authorization");
+
+const { env } = Astro.locals.runtime;
 
 if (!authorization) {
   return Astro.redirect("/outside-telegram/");
@@ -21,7 +22,7 @@ if (!query || query.length < 3) {
   Astro.response.status = 200;
 } else {
   const [error, data] = await catchError(
-    fetch(`${MINI_APP_API_URL}/search/?query=${query}`, {
+    fetch(`${env.MINI_APP_API_URL}/search/?query=${query}`, {
       headers: {
         Authorization: authorization,
       },

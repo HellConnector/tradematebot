@@ -1,9 +1,10 @@
 ---
-import { MINI_APP_API_URL } from "astro:env/server";
 import { catchError } from "../../utils";
 
 export const partial = true;
 const authorization = Astro.request.headers.get("Authorization");
+
+const { env } = Astro.locals.runtime;
 
 if (!authorization) {
   return Astro.redirect("/outside-telegram/");
@@ -25,10 +26,10 @@ let settings = {
 
 if (name && authorization) {
   const [itemDetailsPromise, settingsPromise] = [
-    fetch(`${MINI_APP_API_URL}/search/${encodeURIComponent(name)}/`, {
+    fetch(`${env.MINI_APP_API_URL}/search/${encodeURIComponent(name)}/`, {
       headers: headers,
     }),
-    fetch(`${MINI_APP_API_URL}/profile/settings/`, {
+    fetch(`${env.MINI_APP_API_URL}/profile/settings/`, {
       headers: headers,
     }),
   ];
@@ -73,7 +74,7 @@ if (name && authorization) {
   authorized = settingsOk || itemOk;
 } else {
   const [error, settingsResponse] = await catchError(
-    fetch(`${MINI_APP_API_URL}/profile/settings/`, {
+    fetch(`${env.MINI_APP_API_URL}/profile/settings/`, {
       headers: {
         Authorization: authorization,
       },

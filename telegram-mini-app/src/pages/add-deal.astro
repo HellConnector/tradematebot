@@ -1,9 +1,10 @@
 ---
 import AppLayout from "../layouts/AppLayout.astro";
-import { MINI_APP_API_URL } from "astro:env/server";
 import "../styles/add-deal.css";
 import "../styles/search.css";
 import { catchError } from "../utils";
+
+const { env } = Astro.locals.runtime;
 
 let queryString = "";
 let showError = false;
@@ -19,7 +20,7 @@ if (Astro.request.method === "POST") {
       return Astro.redirect("/outside-telegram/");
     }
     const [error, response] = await catchError(
-      fetch(`${MINI_APP_API_URL}/portfolio/create-deal/`, {
+      fetch(`${env.MINI_APP_API_URL}/portfolio/create-deal/`, {
         headers: {
           Authorization: authorization,
           "Content-Type": "application/json",

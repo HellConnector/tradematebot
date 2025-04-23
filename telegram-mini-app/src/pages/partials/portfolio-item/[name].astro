@@ -1,5 +1,4 @@
 ---
-import { MINI_APP_API_URL } from "astro:env/server";
 import { catchError } from "../../../utils";
 import PortfolioItemDrawer from "../../../components/PortfolioItemDrawer.astro";
 
@@ -8,13 +7,15 @@ const { name } = Astro.params;
 const decodedName = decodeURIComponent(name);
 const authorization = Astro.request.headers.get("Authorization");
 
+const { env } = Astro.locals.runtime;
+
 // Check if Authorization header exists
 if (!authorization) {
   return Astro.redirect("/outside-telegram/");
 }
 
 const [error, item] = await catchError(
-  fetch(`${MINI_APP_API_URL}/portfolio/items/${decodedName}/details/`, {
+  fetch(`${env.MINI_APP_API_URL}/portfolio/items/${decodedName}/details/`, {
     headers: {
       Authorization: authorization,
     },
