@@ -1,0 +1,44 @@
+---
+import AppLayout from "../layouts/AppLayout.astro";
+---
+
+<AppLayout>
+  <div class="outside-telegram-container">
+    <div class="outside-telegram-message">
+      <h1>Telegram Context Required</h1>
+      <p>This application can only work within the Telegram app.</p>
+      <p>Please open this application using the Telegram bot.</p>
+    </div>
+  </div>
+
+<style>
+  .outside-telegram-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    padding: 1rem;
+  }
+
+  .outside-telegram-message {
+    text-align: center;
+    max-width: 500px;
+    padding: 2rem;
+    border-radius: 12px;
+    background-color: var(--tg-theme-bg-color, #ffffff);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  h1 {
+    margin-bottom: 1rem;
+    color: var(--tg-theme-text-color, #000000);
+    font-size: 1.5rem;
+  }
+
+  p {
+    margin-bottom: 0.5rem;
+    color: var(--tg-theme-hint-color, #999999);
+    font-size: 1rem;
+  }
+</style>
+</AppLayout>

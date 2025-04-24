@@ -2,13 +2,14 @@ RU = "RU"
 EN = "EN"
 
 lang_update = {
-    RU: "Язык изменён на `{lang}`." "\n\nНаберите /menu чтобы продолжить.",
-    EN: "Language is changed to `{lang}`." "\n\nEnter /menu to continue.",
+    RU: "Язык изменён на `{lang}`.\n\nНаберите /menu чтобы продолжить.",
+    EN: "Language is changed to `{lang}`.\n\nEnter /menu to continue.",
 }
 
 currency_update = {
-    RU: "Валюта изменена на `{currency}`." "\n\nНаберите /menu чтобы продолжить.",
-    EN: "Your currency is changed to `{currency}`." "\n\nEnter /menu to continue.",
+    RU: "Валюта изменена на `{currency}`.\n\nНаберите /menu чтобы продолжить.",
+    EN: "Your currency is changed to `{currency}`."
+    "\n\nEnter /menu to continue.",
 }
 
 currency_choose = {
@@ -17,41 +18,41 @@ currency_choose = {
 }
 
 reg_message = {
-    RU: "Добро пожаловать в TradeMateBot! \U0001F916"
+    RU: "Добро пожаловать в TradeMateBot! \U0001f916"
     "\n\nЭтот бот поможет вам с с вашими CS2 инвестициями"
-    "\U0001F4B0\n\nЧто я могу? \U0001F3AF"
+    "\U0001f4b0\n\nЧто я могу? \U0001f3af"
     "\n\n- Я могу запоминать все твои сделки, теперь ты ничего не упустишь."
-    "\U0001F4DD\nНапример, когда ты что-то продаешь или покупаешь, просто дай мне знать, "
-    "и я запомню все что нужно\U0001F60E\U0001F4AD "
+    "\U0001f4dd\nНапример, когда ты что-то продаешь или покупаешь, просто дай мне знать, "
+    "и я запомню все что нужно\U0001f60e\U0001f4ad "
     "\n\n- Я могу отслеживать все цены и твою прибыль в реальном времени,"
-    "а ты расслабься и предоставь всю суету мне \U0001F3D6 "
+    "а ты расслабься и предоставь всю суету мне \U0001f3d6 "
     "\nБольше тебе не нужно самому проверять цены предметов, которые ты купил и "
     "потом искать за сколько и когда ты их купил, "
     "просто спроси у меня и я выдам тебе всю нужную информацию!"
     "\nВступайте в наш [новостной канал](https://t.me/tradematenews), все новости по боту, "
     "а также уведомления о технических работах будут именно там."
-    "\U0001F911\n\nПеред началом работы, выбери свою валюту с помощью кнопок.",
-    EN: "Welcome to TradeMateBot! \U0001F916"
+    "\U0001f911\n\nПеред началом работы, выбери свою валюту с помощью кнопок.",
+    EN: "Welcome to TradeMateBot! \U0001f916"
     "\n\nThis bot is dedicated to help you with CS2 investments "
-    "\U0001F4B0\n\nWhat can I do? \U0001F3AF"
+    "\U0001f4b0\n\nWhat can I do? \U0001f3af"
     "\n\n- I can remember all your deals, so you don't miss a thing "
-    "\U0001F4DD\nFor example when you buy or sell something just let "
-    "me know and I'll remember it\U0001F60E\U0001F4AD "
+    "\U0001f4dd\nFor example when you buy or sell something just let "
+    "me know and I'll remember it\U0001f60e\U0001f4ad "
     "\n\n- I can track all prices and profits in real time for you, "
-    "just relax and let me do the hard work \U0001F3D6 "
+    "just relax and let me do the hard work \U0001f3d6 "
     "\nYou don't have to check skins' prices one by one and then "
     "find what did you buy them for, "
-    "just ask me and you'll know everything you need to know\U0001F911"
+    "just ask me and you'll know everything you need to know\U0001f911"
     "\nJoin our [news channel](https://t.me/tradematenews), "
     "all bot related news and maintenance announcements will be made "
     "there.\nTo start using bot, set your currency using buttons below.",
 }
 
 welcome_back = {
-    RU: "Добро пожаловать обратно! \U0001F44B\n"
+    RU: "Добро пожаловать обратно! \U0001f44b\n"
     "Наберите /menu, чтобы начать пользоваться ботом, или /help, если хотите узнать "
     "о его возможностях.",
-    EN: "Welcome back! \U0001F44B\n"
+    EN: "Welcome back! \U0001f44b\n"
     "Enter /menu to start or /help if you want to know more about bot's features.",
 }
 
@@ -64,7 +65,7 @@ help_message = {
     "/setcurrency - изменить валюту\n"
     "/setlang - изменить язык\n"
     "/wipeout - удалить все свои сделки и предметы\n\n"
-    "\U000026A0 Чтобы начать пользовать ботом, нужно подписаться на наш "
+    "\U000026a0 Чтобы начать пользовать ботом, нужно подписаться на наш "
     "[новостной канал](https://t.me/tradematenews). Все новости по боту, "
     "а также уведомления о тех. работах будут именно там.",
     EN: "Here's detailed [guide](https://telegra.ph/TradeMate-Info-07-16) to this bot. If you "
@@ -73,7 +74,7 @@ help_message = {
     "/setcurrency - changes your currency\n"
     "/setlang - changes your language\n"
     "/wipeout - deletes all deals and items\n\n"
-    "\U000026A0 To start using bot you need to join our "
+    "\U000026a0 To start using bot you need to join our "
     "[news channel](https://t.me/tradematenews). "
     "All bot related news and maintenance announcements will be made there.",
 }
@@ -122,7 +123,10 @@ item_error_message = {
     EN: "Too many items found - `{length}`, please refine your query.",
 }
 
-deal_type_message = {RU: "Выберите тип сделки.", EN: "Select the deal item_type."}
+deal_type_message = {
+    RU: "Выберите тип сделки.",
+    EN: "Select the deal item_type.",
+}
 
 select_item_error_message = {
     RU: "Предмета с таким номером не нашлось, попробуйте еще раз.\n\nНаберите /menu, "
@@ -135,7 +139,7 @@ select_item_error_message = {
 select_item_skip_message = {
     RU: "Сперва найдите ваш предмет с помощью запроса.\n"
     "Наберите /help, если нужна помощь.",
-    EN: "You need to query items first.\n" "Enter /help if you need help.",
+    EN: "You need to query items first.\nEnter /help if you need help.",
 }
 
 item_not_set = {
@@ -226,25 +230,25 @@ unknown_query_message = {
 
 query_message = {
     RU: "Чтобы добавить сделку, сначала найдите свой предмет с помощью запроса, примеры ниже:\n"
-    "\U0001F52B оружия ⇒ `w awp beast ft st` или `w glock fade fn`\n"
-    "\U0001F52A ножи ⇒ `k talon fade fn st`\n"
-    "\U0001F5BC стикеры ⇒ `s howl` или `s zywoo`\n"
-    "\U0001F9E7 патчи ⇒ `p bravo`\n"
-    "\U0001F46E агенты ⇒ `a ct ava`\n"
-    "\U0001F9F0 контейнеры ⇒ `c chroma` или `c berlin autograph` \n"
-    "\U0001F6E0 расходники ⇒ `t phoenix key` или `t berlin pass`\n"
-    "\U0001F9E4 перчатки ⇒ `g hand wraps fn` или `g vice mw`\n"
+    "\U0001f52b оружия ⇒ `w awp beast ft st` или `w glock fade fn`\n"
+    "\U0001f52a ножи ⇒ `k talon fade fn st`\n"
+    "\U0001f5bc стикеры ⇒ `s howl` или `s zywoo`\n"
+    "\U0001f9e7 патчи ⇒ `p bravo`\n"
+    "\U0001f46e агенты ⇒ `a ct ava`\n"
+    "\U0001f9f0 контейнеры ⇒ `c chroma` или `c berlin autograph` \n"
+    "\U0001f6e0 расходники ⇒ `t phoenix key` или `t berlin pass`\n"
+    "\U0001f9e4 перчатки ⇒ `g hand wraps fn` или `g vice mw`\n"
     "Наберите /menu, чтобы отменить текущее действие и попасть в меню, или /help, "
     "если нужна помощь.",
     EN: "To add a deal you need to find your item with our query using examples below:\n"
-    "\U0001F52B weapon ⇒ `w awp beast ft st` or `w glock fade fn`\n"
-    "\U0001F52A knife ⇒ `k talon fade fn st`\n"
-    "\U0001F5BC sticker ⇒ `s howl` or `s zywoo`\n"
-    "\U0001F9E7 patch ⇒ `p bravo`\n"
-    "\U0001F46E agents⇒ `a ct ava` \n"
-    "\U0001F9F0 container ⇒ `c chroma` or `c berlin autograph` \n"
-    "\U0001F6E0 tool ⇒ `t phoenix key` or `t berlin pass`\n"
-    "\U0001F9E4 gloves ⇒ `g hand wraps fn` or `g vice mw`\n"
+    "\U0001f52b weapon ⇒ `w awp beast ft st` or `w glock fade fn`\n"
+    "\U0001f52a knife ⇒ `k talon fade fn st`\n"
+    "\U0001f5bc sticker ⇒ `s howl` or `s zywoo`\n"
+    "\U0001f9e7 patch ⇒ `p bravo`\n"
+    "\U0001f46e agents⇒ `a ct ava` \n"
+    "\U0001f9f0 container ⇒ `c chroma` or `c berlin autograph` \n"
+    "\U0001f6e0 tool ⇒ `t phoenix key` or `t berlin pass`\n"
+    "\U0001f9e4 gloves ⇒ `g hand wraps fn` or `g vice mw`\n"
     "Enter /menu to reset current action and go to menu or /help if you need help.",
 }
 
@@ -318,9 +322,9 @@ item_not_exist = {
 }
 
 subscriber_message = {
-    RU: "\U000026D4 Подпишишь на наш [новостной канал](https://t.me/tradematenews), "
+    RU: "\U000026d4 Подпишишь на наш [новостной канал](https://t.me/tradematenews), "
     "чтобы начать пользоваться ботом.",
-    EN: "\U000026D4 Join our [news channel](https://t.me/tradematenews) "
+    EN: "\U000026d4 Join our [news channel](https://t.me/tradematenews) "
     "to start using bot.",
 }
 
@@ -379,7 +383,10 @@ wipeout_message = {
 
 wipeout_yes = {RU: "Точно уверены?", EN: "Really sure?"}
 
-wipeout_no = {RU: "Наберите /menu чтобы продолжить.", EN: "Enter /menu to continue."}
+wipeout_no = {
+    RU: "Наберите /menu чтобы продолжить.",
+    EN: "Enter /menu to continue.",
+}
 
 wipeout_sure = {
     RU: "Все ваши предметы и сделки удалены.\n\nНаберите /menu чтобы продолжить.",

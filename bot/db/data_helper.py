@@ -63,7 +63,9 @@ async def get_stats_data(
     stats = (
         select(
             ie.c.item_name,
-            func.date_part("day", ie.c.sell_date - ib.c.buy_date).label("hold_days"),
+            func.date_part("day", ie.c.sell_date - ib.c.buy_date).label(
+                "hold_days"
+            ),
             (ib.c.buy_count - ie.c.sell_count).label("left_count"),
             ib.c.buy_count,
             ib.c.avg_buy_price,
@@ -75,7 +77,10 @@ async def get_stats_data(
             (
                 (
                     ie.c.earned_by_item
-                    / case((ib.c.spent_by_item == 0.0, 1), else_=ib.c.spent_by_item)
+                    / case(
+                        (ib.c.spent_by_item == 0.0, 1),
+                        else_=ib.c.spent_by_item,
+                    )
                     - 1
                 )
                 * 100
@@ -88,7 +93,9 @@ async def get_stats_data(
     return (await session.execute(stats)).all()
 
 
-async def get_tracking_data(client_id: int, currency: str, session: AsyncSession):
+async def get_tracking_data(
+    client_id: int, currency: str, session: AsyncSession
+):
     client_deals = await session.execute(
         select(
             func.min(Deal.date),
@@ -111,7 +118,13 @@ async def get_tracking_data(client_id: int, currency: str, session: AsyncSession
             Deal.deal_currency == Price.currency,
             Deal.deal_currency == currency,
         )
-        .group_by(Deal.item_id, Item.name, Price.price, Item.count, Deal.deal_currency)
+        .group_by(
+            Deal.item_id,
+            Item.name,
+            Price.price,
+            Item.count,
+            Deal.deal_currency,
+        )
     )
 
     deals = []
@@ -119,7 +132,9 @@ async def get_tracking_data(client_id: int, currency: str, session: AsyncSession
     for d_date, name, count, buy, price, currency in client_deals:
         # hold days
         deal_date = datetime.date(d_date)
-        current_date = datetime.strptime(date.today().isoformat(), "%Y-%m-%d").date()
+        current_date = datetime.strptime(
+            date.today().isoformat(), "%Y-%m-%d"
+        ).date()
         delta_days = current_date - deal_date
 
         # income in percent
@@ -202,13 +217,13 @@ async def get_tracking_records(
 async def get_tracking_records_for_user(
     client: Client, span: int, session: AsyncSession
 ) -> Sequence[TrackingRecord] | None:
-
     tracking_records = (
         await session.scalars(
             client.tracking_records.select()
             .where(
                 TrackingRecord.currency == client.currency,
-                TrackingRecord.measure_time >= datetime.now() - timedelta(days=span),
+                TrackingRecord.measure_time
+                >= datetime.now() - timedelta(days=span),
             )
             .order_by(TrackingRecord.measure_time.asc())
         )

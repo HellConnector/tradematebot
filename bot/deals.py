@@ -32,7 +32,9 @@ def get_item_function(pattern, pars_func):
         u_data[constants.CLIENT_CURRENCY] = client.currency
         if len(names) < 30:
             put_item_names_into_user_data(names, u_data)
-            reply_message = get_items_reply_message(names, text, client.lang, deal_type)
+            reply_message = get_items_reply_message(
+                names, text, client.lang, deal_type
+            )
             if len(names) == 1:
                 u_data[constants.ITEM_NAME] = names[0]
                 if deal_type == "sell":
@@ -52,10 +54,14 @@ def get_item_function(pattern, pars_func):
                             reply_markup=kb,
                         )
                         return utils.State.DEALS
-            await user.send_message(reply_message, reply_markup=ReplyKeyboardRemove())
+            await user.send_message(
+                reply_message, reply_markup=ReplyKeyboardRemove()
+            )
         else:
             await user.send_message(
-                messages.item_error_message[client.lang].format(length=len(names))
+                messages.item_error_message[client.lang].format(
+                    length=len(names)
+                )
             )
         return utils.State.ITEMS
 
@@ -79,10 +85,16 @@ async def selected_item(
         # if at least one item was added in user_data
         if 1 in u_data[constants.ITEMS]:
             log.info(f"Key [{e}] not found in user_data")
-            await user.send_message(messages.select_item_error_message[client.lang])
+            await user.send_message(
+                messages.select_item_error_message[client.lang]
+            )
         else:
-            log.info(f"User [{user.id} -> {user.first_name}] do not query any items.")
-            await user.send_message(messages.select_item_skip_message[client.lang])
+            log.info(
+                f"User [{user.id} -> {user.first_name}] do not query any items."
+            )
+            await user.send_message(
+                messages.select_item_skip_message[client.lang]
+            )
     else:
         u_data[constants.ITEM_NAME] = item_name
         item = await session.scalar(
@@ -129,7 +141,9 @@ async def selected_item(
                             comma_currencies=comma_currencies,
                             item_name=u_data[constants.ITEM_NAME],
                         ),
-                        reply_markup=utils.get_inline_markup(constants.DEAL_TYPES),
+                        reply_markup=utils.get_inline_markup(
+                            constants.DEAL_TYPES
+                        ),
                     )
                     return utils.State.DEALS
         u_data[constants.CLIENT_ID] = client.id
@@ -178,7 +192,8 @@ async def item_count_price(
     u_data = context.user_data
     if constants.ITEM_NAME not in u_data:
         await user.send_message(
-            messages.item_not_set[client.lang], reply_markup=ReplyKeyboardRemove()
+            messages.item_not_set[client.lang],
+            reply_markup=ReplyKeyboardRemove(),
         )
         return utils.State.ITEMS
 
@@ -195,7 +210,9 @@ async def item_count_price(
         return utils.State.ITEMS
 
     price = round(price, 2)
-    price_is_valid, price_message = validate_price(price, u_data, context, client.lang)
+    price_is_valid, price_message = validate_price(
+        price, u_data, context, client.lang
+    )
     if not price_is_valid:
         await user.send_message(price_message)
         return utils.State.ITEMS
@@ -308,7 +325,9 @@ def get_items_reply_message(
             )
         else:
             head = messages.item_found_picker[lang]
-            str_names = "\n".join(f"`{i + 1}) {name}`" for i, name in enumerate(items))
+            str_names = "\n".join(
+                f"`{i + 1}) {name}`" for i, name in enumerate(items)
+            )
             return f"{head}{str_names}"
     else:
         return messages.item_not_exist[lang].format(text=text)
@@ -325,7 +344,9 @@ def validate_count(count: int, lang: str) -> Tuple[bool, Union[str, None]]:
     if count <= 0:
         return False, messages.item_count_negative[lang].format(count=count)
     if count >= 99999:
-        return False, messages.item_count_limit_reached[lang].format(count=count)
+        return False, messages.item_count_limit_reached[lang].format(
+            count=count
+        )
     return True, None
 
 

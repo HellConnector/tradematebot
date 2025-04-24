@@ -1,0 +1,15 @@
+---
+import AppLayout from "../layouts/AppLayout.astro";
+import "../styles/stats.css";
+---
+
+<AppLayout>
+  <div
+    hx-get="/partials/stats/"
+    hx-target="main"
+    hx-swap="outerHTML"
+    hx-trigger="load"
+    hx-indicator="#main-content-skeleton"
+  >
+  </div>
+</AppLayout>

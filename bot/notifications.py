@@ -77,7 +77,9 @@ async def choose_item(
     text = messages.notify_item_choose[client.lang].format(
         item_name=item_name, currency=currency, avg_price=avg_price
     )
-    await user.send_message(text, reply_markup=utils.get_inline_markup(["Cancel"]))
+    await user.send_message(
+        text, reply_markup=utils.get_inline_markup(["Cancel"])
+    )
     return utils.State.NOTIFICATIONS
 
 
@@ -186,7 +188,9 @@ async def take_profit(
         return utils.State.NOTIFICATIONS
 
     item = await session.scalar(
-        client.items.select().where(Item.name == context.user_data[constants.ITEM_NAME])
+        client.items.select().where(
+            Item.name == context.user_data[constants.ITEM_NAME]
+        )
     )
 
     item.take_profit = item_price
@@ -197,5 +201,7 @@ async def take_profit(
         item_name=context.user_data[constants.ITEM_NAME],
         currency=context.user_data[constants.CLIENT_CURRENCY],
     )
-    await user.send_message(m, reply_markup=utils.get_main_menu_inline_markup())
+    await user.send_message(
+        m, reply_markup=utils.get_main_menu_inline_markup()
+    )
     return utils.State.MAIN_MENU

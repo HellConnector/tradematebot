@@ -1,0 +1,307 @@
+---
+import { catchError } from "../../utils";
+import PortfolioItem from "../../components/PortfolioItem.astro";
+import PortfolioItemDrawerSkeleton from "../../components/PortfolioItemDrawerSkeleton.astro";
+
+export const partial = true;
+const authorization = Astro.request.headers.get("Authorization");
+
+const { env } = Astro.locals.runtime;
+
+if (!authorization) {
+  return Astro.redirect("/outside-telegram/");
+}
+
+const nameFilter = Astro.url.searchParams.get("name") || "";
+
+const [error, response] = await catchError(
+  fetch(`${env.MINI_APP_API_URL}/portfolio/`, {
+    headers: {
+      Authorization: authorization,
+    },
+  }),
+);
+
+let portfolioSummary = null;
+
+if (error) {
+  console.error("Error fetching portfolio:", error);
+} else if (response.ok) {
+  try {
+    portfolioSummary = await response.json();
+  } catch (e) {
+    console.error("Failed to parse portfolio data:", e);
+  }
+}
+---
+
+<div class="portfolio-container">
+  {
+    portfolioSummary ? (
+      <>
+        <header class="portfolio-summary-header">
+          <div class="summary-container">
+            <div class="summary-item">
+              <div class="summary-label">Spent</div>
+              <div class="summary-value">
+                {portfolioSummary.spentValue.toFixed(2)}{" "}
+                {portfolioSummary.items[0].currency}
+              </div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-label">Current</div>
+              <div class="summary-value">
+                {portfolioSummary.currentValue.toFixed(2)}{" "}
+                {portfolioSummary.items[0].currency}
+              </div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-label">Profit</div>
+              <div
+                class={`summary-value ${portfolioSummary.profit >= 0 ? "profit-positive" : "profit-negative"}`}
+              >
+                {portfolioSummary.profit >= 0 ? "+" : ""}
+                {portfolioSummary.profit.toFixed(2)}{" "}
+                {portfolioSummary.items[0].currency}
+              </div>
+            </div>
+          </div>
+          <div class="search-input-container">
+            <input
+              type="text"
+              id="portfolio-search"
+              class="telegram-search-input"
+              placeholder="Type item name to filter the list"
+              autocomplete="off"
+              value={nameFilter}
+            />
+            <div class="search-icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </div>
+            <div class="clear-icon" id="clear-search" style="display: none;">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </div>
+          </div>
+        </header>
+        <div class="portfolio-items">
+          {portfolioSummary.items.map((item) => {
+            const shouldHide = nameFilter && !(item.name === nameFilter);
+            return (
+              <PortfolioItem
+                name={item.name}
+                count={item.count}
+                imageUrl={item.imageUrl}
+                buyPrice={item.buyPrice}
+                currentPrice={item.currentPrice}
+                currency={item.currency}
+                incomePercentage={item.incomePercentage}
+                incomeAmount={item.incomeAmount}
+                style={shouldHide ? "display: none;" : ""}
+              />
+            );
+          })}
+        </div>
+        <div id="overlay" class="overlay" onclick="handleOverlayClick()" />
+        <div id="drawer" class="bottom-drawer">
+          <div class="drawer-handle" onclick="hideDrawer()" />
+          <div id="drawer-content">
+            <PortfolioItemDrawerSkeleton />
+            <div id="item-details-container" />
+          </div>
+        </div>
+      </>
+    ) : (
+      <>
+        <div class="empty-portfolio">
+          <p>
+            Your portfolio is empty. Start adding deals to track your
+            investments!
+          </p>
+        </div>
+        <div class="down-arrow">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="60"
+            height="60"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <polyline points="19 12 12 19 5 12" />
+          </svg>
+        </div>
+      </>
+    )
+  }
+</div>
+
+<script>
+  window.initializeFilter = function () {
+    const searchInput = document.getElementById("portfolio-search");
+    const clearButton = document.getElementById("clear-search");
+    const portfolioItems = document.querySelectorAll(".portfolio-item");
+
+    if (!searchInput || !clearButton || portfolioItems.length === 0) {
+      // Elements not found yet, try again after a short delay
+      setTimeout(window.initializeFilter, 100);
+      return;
+    }
+
+    function filterItems(query) {
+      const normalizedQuery = query.toLowerCase().trim();
+
+      portfolioItems.forEach((item) => {
+        const itemNameElement = item.querySelector(".clickable-item-name");
+        if (!itemNameElement) return;
+
+        const itemName = itemNameElement.textContent.toLowerCase();
+
+        if (normalizedQuery === "" || itemName.includes(normalizedQuery)) {
+          item.style.display = "";
+        } else {
+          item.style.display = "none";
+        }
+      });
+    }
+
+    searchInput.addEventListener("input", () => {
+      if (searchInput.value.trim() !== "") {
+        clearButton.style.display = "flex";
+      } else {
+        clearButton.style.display = "none";
+      }
+      filterItems(searchInput.value);
+    });
+
+    clearButton.addEventListener("click", () => {
+      searchInput.value = "";
+      clearButton.style.display = "none";
+      filterItems("");
+    });
+  };
+
+  window.initializeFilter();
+
+  window.applyInitialFilter = function () {
+    const searchInput = document.getElementById("portfolio-search");
+    const clearButton = document.getElementById("clear-search");
+
+    if (!searchInput || !clearButton) {
+      setTimeout(window.applyInitialFilter, 100);
+      return;
+    }
+
+    if (searchInput.value.trim() !== "") {
+      clearButton.style.display = "flex";
+      // Trigger the filtering function with the initial value
+      const event = new Event("input", { bubbles: true });
+      searchInput.dispatchEvent(event);
+    }
+  };
+
+  window.applyInitialFilter();
+
+  const mainButtonColor = "rgb(49, 181, 69)";
+
+  document.body.addEventListener("htmx:afterSwap", function (evt) {
+    if (
+      evt.detail.target.querySelector(".portfolio-item") ||
+      evt.detail.target.querySelector(".empty-portfolio")
+    ) {
+      if (evt.detail.target.querySelector(".portfolio-item")) {
+        window.initializeFilter();
+        window.applyInitialFilter();
+        window.app.MainButton.hasShineEffect = false;
+      }
+
+      if (evt.detail.target.querySelector(".empty-portfolio")) {
+        window.app.MainButton.hasShineEffect = true;
+      }
+
+      window.app.BackButton.hide();
+
+      window.app.MainButton.offClick();
+      window.app.MainButton.setText("Add deal");
+      window.app.MainButton.color = mainButtonColor;
+      window.app.MainButton.onClick(() => {
+        window.location.href = "/add-deal/";
+      });
+      window.app.MainButton.show();
+    }
+
+    if (
+      evt.detail.target.id === "item-details-container" &&
+      evt.detail.target.querySelector(".drawer-item-details")
+    ) {
+      const itemDetails = evt.detail.target.querySelector(
+        ".drawer-item-details",
+      );
+      const itemName =
+        itemDetails.querySelector(".drawer-item-title").textContent;
+
+      window.app.MainButton.offClick();
+      window.app.MainButton.setText("Add deal");
+      window.app.MainButton.color = mainButtonColor;
+      window.app.MainButton.onClick(() => {
+        window.location.href = `/add-deal/?name=${encodeURIComponent(itemName)}`;
+      });
+    }
+  });
+
+  window.app.BackButton.hide();
+
+  window.app.MainButton.setText("Add deal");
+  window.app.MainButton.color = mainButtonColor;
+  window.app.MainButton.show();
+
+  const emptyPortfolio = document.querySelector(".empty-portfolio");
+  if (emptyPortfolio) {
+    window.app.MainButton.hasShineEffect = true;
+  } else {
+    window.app.MainButton.hasShineEffect = false;
+  }
+
+  window.app.MainButton.onClick(() => {
+    window.location.href = "/add-deal/";
+  });
+
+  window.handleOverlayClick = function () {
+    const isItemDetailsDrawerOpen = document
+      .getElementById("drawer")
+      ?.classList.contains("open");
+
+    if (isItemDetailsDrawerOpen) {
+      window.hideDrawer();
+    }
+  };
+</script>

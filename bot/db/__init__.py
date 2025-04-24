@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from typing import AsyncContextManager
+from typing import Any, AsyncGenerator
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
@@ -23,6 +23,7 @@ from .models import (
     Sticker,
     Agent,
     TrackingRecord,
+    SearchItem,
 )
 
 DB_ADDR = (
@@ -30,11 +31,13 @@ DB_ADDR = (
     f"{settings.POSTGRES_HOST}/{settings.POSTGRES_DB}"
 )
 
-async_engine = create_async_engine(DB_ADDR, echo=False, pool_pre_ping=True, pool_size=20, max_overflow=20)
+async_engine = create_async_engine(
+    DB_ADDR, echo=False, pool_pre_ping=True, pool_size=20, max_overflow=20
+)
 
 
 @asynccontextmanager
-async def get_async_session(**kwargs) -> AsyncContextManager[AsyncSession]:
+async def get_async_session(**kwargs) -> AsyncGenerator[AsyncSession, Any]:
     session = AsyncSession(bind=async_engine, expire_on_commit=False, **kwargs)
     try:
         yield session
@@ -59,6 +62,7 @@ __all__ = (
     "Sticker",
     "Agent",
     "TrackingRecord",
+    "SearchItem",
     "get_async_session",
     "DB_ADDR",
     "get_stats_data",

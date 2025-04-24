@@ -1,0 +1,12 @@
+---
+interface Props {
+  name: string;
+  imageUrl: string;
+}
+const { name, imageUrl } = Astro.props;
+---
+
+<div class="search-item" hx-on:click="selectSearchItem(this)">
+  <img src={imageUrl} alt={name} />
+  <span>{name}</span>
+</div>

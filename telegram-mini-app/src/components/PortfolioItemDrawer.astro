@@ -1,0 +1,134 @@
+---
+// PortfolioItemDrawer.astro
+// Component for rendering portfolio item details in a drawer
+export interface Props {
+  item: {
+    name: string;
+    imageUrl: string;
+    count: number;
+    deltaDays: number;
+    buyPrice: number;
+    currentPrice: number;
+    currency: string;
+    incomePercentage: number;
+    incomeAmount: number;
+    deals?: {
+      dealType: string;
+      price: number;
+      currency: string;
+      volume: number;
+      date: string;
+    }[];
+  };
+}
+
+const { item } = Astro.props;
+---
+
+<div class="drawer-item-details">
+  <div class="drawer-item-header">
+    <h2 class="drawer-item-title">{item.name}</h2>
+  </div>
+
+  <div class="drawer-item-image-container">
+    <img class="drawer-item-image" src={item.imageUrl} alt={item.name} />
+  </div>
+
+  <div class="drawer-item-info">
+    <div class="drawer-item-section">
+      <h3 class="drawer-section-title">Item Information</h3>
+      <div class="drawer-item-detail">
+        <span class="drawer-detail-label">Quantity:</span>
+        <span class="drawer-detail-value">{item.count}</span>
+      </div>
+      <div class="drawer-item-detail">
+        <span class="drawer-detail-label">Days Since Purchase:</span>
+        <span class="drawer-detail-value">{item.deltaDays}</span>
+      </div>
+    </div>
+
+    <div class="drawer-item-section">
+      <h3 class="drawer-section-title">Price Information</h3>
+      <div class="drawer-item-detail">
+        <span class="drawer-detail-label">Buy Price:</span>
+        <span class="drawer-detail-value"
+          >{item.buyPrice}{" "}{item.currency}</span
+        >
+      </div>
+      <div class="drawer-item-detail">
+        <span class="drawer-detail-label">Current Price:</span>
+        <span class="drawer-detail-value"
+          >{item.currentPrice}{" "}{item.currency}</span
+        >
+      </div>
+      <div class="drawer-item-detail">
+        <span class="drawer-detail-label">Total Investment:</span>
+        <span class="drawer-detail-value"
+          >{
+            item.buyPrice * item.count === 0
+              ? "0"
+              : (item.buyPrice * item.count).toFixed(2)
+          }{" "}{item.currency}</span
+        >
+      </div>
+      <div class="drawer-item-detail">
+        <span class="drawer-detail-label">Current Value:</span>
+        <span class="drawer-detail-value"
+          >{
+            item.currentPrice * item.count === 0
+              ? "0"
+              : (item.currentPrice * item.count).toFixed(2)
+          }{" "}{item.currency}</span
+        >
+      </div>
+    </div>
+
+    <div class="drawer-item-section">
+      <h3 class="drawer-section-title">Profit Information</h3>
+      <div class="drawer-item-detail">
+        <span class="drawer-detail-label">Profit Percentage:</span>
+        <span
+          class={`drawer-detail-value ${item.incomePercentage >= 0 ? "profit-positive" : "profit-negative"}`}
+        >
+          {item.incomePercentage >= 0 ? "+" : ""}{item.incomePercentage}%
+        </span>
+      </div>
+      <div class="drawer-item-detail">
+        <span class="drawer-detail-label">Profit:</span>
+        <span
+          class={`drawer-detail-value ${item.incomeAmount >= 0 ? "profit-positive" : "profit-negative"}`}
+        >
+          {item.incomeAmount >= 0 ? "+" : ""}{item.incomeAmount}{" "}{
+            item.currency
+          }
+        </span>
+      </div>
+    </div>
+
+    {
+      item.deals && item.deals.length > 0 && (
+        <div class="drawer-item-section">
+          <h3 class="drawer-section-title">Deals History</h3>
+          <div class="drawer-deals-list">
+            {item.deals.map((deal) => (
+              <div class={`drawer-deal-item ${deal.dealType.toLowerCase()}`}>
+                <div class="drawer-deal-type">
+                  <span>{deal.dealType}</span>
+                </div>
+                <div class="drawer-deal-details">
+                  <div class="drawer-deal-info">
+                    <span class="drawer-deal-price">
+                      {deal.price} {deal.currency}
+                    </span>
+                    <span class="drawer-deal-volume">x{deal.volume}</span>
+                  </div>
+                  <div class="drawer-deal-date">{deal.date}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+    }
+  </div>
+</div>

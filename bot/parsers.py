@@ -40,7 +40,9 @@ async def parse_weapon_text(text: str, s: AsyncSession) -> List[str]:
                 q.is_(True),
                 t.is_(True),
                 table.skin_type == "gun",
-                and_(func.lower(table.full_name).contains(n) for n in name_keys),
+                and_(
+                    func.lower(table.full_name).contains(n) for n in name_keys
+                ),
             )
         )
     else:
@@ -48,7 +50,9 @@ async def parse_weapon_text(text: str, s: AsyncSession) -> List[str]:
             select(table.full_name).filter(
                 q.is_(True),
                 table.skin_type == "gun",
-                and_(func.lower(table.full_name).contains(n) for n in name_keys),
+                and_(
+                    func.lower(table.full_name).contains(n) for n in name_keys
+                ),
             )
         )
     for skin in skins:
@@ -90,7 +94,10 @@ async def parse_container_text(text: str, s: AsyncSession) -> List[str]:
             (
                 await s.scalars(
                     select(table.name).filter(
-                        and_(func.lower(table.name).contains(n) for n in name_keys)
+                        and_(
+                            func.lower(table.name).contains(n)
+                            for n in name_keys
+                        )
                     )
                 )
             ).all(),
@@ -111,7 +118,10 @@ async def parse_agent_text(text: str, s: AsyncSession) -> List[str]:
                     await s.scalars(
                         select(model.name).filter(
                             model.side == side,
-                            and_(func.lower(model.name).contains(n) for n in name_keys),
+                            and_(
+                                func.lower(model.name).contains(n)
+                                for n in name_keys
+                            ),
                         )
                     )
                 ).all(),
@@ -137,7 +147,10 @@ async def parse_agent_text(text: str, s: AsyncSession) -> List[str]:
                 (
                     await s.scalars(
                         select(model.name).filter(
-                            and_(func.lower(model.name).contains(n) for n in name_keys),
+                            and_(
+                                func.lower(model.name).contains(n)
+                                for n in name_keys
+                            ),
                         )
                     )
                 ).all(),
@@ -155,7 +168,10 @@ async def parse_tool_text(text: str, s: AsyncSession) -> List[str]:
             (
                 await s.scalars(
                     select(table.name).filter(
-                        and_(func.lower(table.name).contains(n) for n in name_keys)
+                        and_(
+                            func.lower(table.name).contains(n)
+                            for n in name_keys
+                        )
                     )
                 )
             ).all(),
@@ -187,7 +203,8 @@ async def parse_patch_text(text: str, s: AsyncSession) -> List[str]:
                     select(table.full_name).filter(
                         table.sticker_type == "patch",
                         and_(
-                            func.lower(table.full_name).contains(n) for n in name_keys
+                            func.lower(table.full_name).contains(n)
+                            for n in name_keys
                         ),
                     )
                 )
@@ -228,7 +245,9 @@ async def parse_knife_text(text: str, s: AsyncSession) -> List[str]:
                 q.is_(True),
                 t.is_(True),
                 table.skin_type == "knife",
-                and_(func.lower(table.full_name).contains(n) for n in name_keys),
+                and_(
+                    func.lower(table.full_name).contains(n) for n in name_keys
+                ),
             )
         )
     elif not st and is_q:
@@ -236,7 +255,9 @@ async def parse_knife_text(text: str, s: AsyncSession) -> List[str]:
             select(table).filter(
                 q.is_(True),
                 table.skin_type == "knife",
-                and_(func.lower(table.full_name).contains(n) for n in name_keys),
+                and_(
+                    func.lower(table.full_name).contains(n) for n in name_keys
+                ),
             )
         )
     elif st and not is_q:
@@ -245,7 +266,9 @@ async def parse_knife_text(text: str, s: AsyncSession) -> List[str]:
                 t.is_(True),
                 table.skin_type == "knife",
                 table.skin.is_(None),
-                and_(func.lower(table.full_name).contains(n) for n in name_keys),
+                and_(
+                    func.lower(table.full_name).contains(n) for n in name_keys
+                ),
             )
         )
     else:
@@ -254,7 +277,10 @@ async def parse_knife_text(text: str, s: AsyncSession) -> List[str]:
                 select(table).filter(
                     table.skin_type == "knife",
                     table.skin.is_(None),
-                    and_(func.lower(table.full_name).contains(n) for n in name_keys),
+                    and_(
+                        func.lower(table.full_name).contains(n)
+                        for n in name_keys
+                    ),
                 )
             )
         ).all()
@@ -262,7 +288,9 @@ async def parse_knife_text(text: str, s: AsyncSession) -> List[str]:
     for skin in skins:
         name = None
         if st and is_q:
-            name = f"{constants.STAR} {constants.ST} {skin.full_name} ({quality})"
+            name = (
+                f"{constants.STAR} {constants.ST} {skin.full_name} ({quality})"
+            )
         elif not st and is_q:
             name = f"{constants.STAR} {skin.full_name} ({quality})"
         elif st and not is_q:
@@ -275,7 +303,9 @@ async def parse_knife_text(text: str, s: AsyncSession) -> List[str]:
                 )
             )
         elif not st and not is_q:
-            names.extend(list(map(lambda x: f"{constants.STAR} {x}", skin.get_names())))
+            names.extend(
+                list(map(lambda x: f"{constants.STAR} {x}", skin.get_names()))
+            )
         if name:
             names.append(name)
     return names

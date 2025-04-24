@@ -29,7 +29,11 @@ class State(Enum):
     NOTIFICATIONS = 3
 
 
-ALLOWED_USERS_STATUS = (ChatMember.MEMBER, ChatMember.OWNER, ChatMember.ADMINISTRATOR)
+ALLOWED_USERS_STATUS = (
+    ChatMember.MEMBER,
+    ChatMember.OWNER,
+    ChatMember.ADMINISTRATOR,
+)
 
 
 def get_pattern(regex: str) -> re.Pattern:
@@ -83,7 +87,9 @@ def inject_db_session_and_client(callback):
     return inner
 
 
-def get_inline_markup(buttons: Union[List, Tuple], rows=1) -> InlineKeyboardMarkup:
+def get_inline_markup(
+    buttons: Union[List, Tuple], rows=1
+) -> InlineKeyboardMarkup:
     if not 1 <= rows <= len(buttons):
         raise ValueError(
             "Rows count can not be less than 1 and more than buttons count."
@@ -93,7 +99,8 @@ def get_inline_markup(buttons: Union[List, Tuple], rows=1) -> InlineKeyboardMark
     keyboard = [
         [
             InlineKeyboardButton(
-                str(buttons[i * cols + j]), callback_data=str(buttons[i * cols + j])
+                str(buttons[i * cols + j]),
+                callback_data=str(buttons[i * cols + j]),
             )
             for j in range(cols)
         ]
@@ -109,9 +116,12 @@ def get_inline_markup(buttons: Union[List, Tuple], rows=1) -> InlineKeyboardMark
 
 
 def get_inline_markup_keyboard_row(
-    buttons: Union[List, Tuple]
+    buttons: Union[List, Tuple],
 ) -> list[InlineKeyboardButton]:
-    return [InlineKeyboardButton(button, callback_data=button) for button in buttons]
+    return [
+        InlineKeyboardButton(button, callback_data=button)
+        for button in buttons
+    ]
 
 
 def get_main_menu_inline_markup() -> InlineKeyboardMarkup:
@@ -120,21 +130,19 @@ def get_main_menu_inline_markup() -> InlineKeyboardMarkup:
             get_inline_markup_keyboard_row(["Deals", "Notifications"]),
             [
                 InlineKeyboardButton(
-                    "Stats",
+                    "Portfolio",
                     web_app=WebAppInfo(
-                        url=f"{settings.MINI_APP_URL}/stats/?sort=newest"
+                        url=f"{settings.MINI_APP_URL}/portfolio/"
                     ),
                 ),
                 InlineKeyboardButton(
-                    "Tracking",
-                    web_app=WebAppInfo(
-                        url=f"{settings.MINI_APP_URL}/tracking/?sort=percent"
-                    ),
+                    "Stats",
+                    web_app=WebAppInfo(url=f"{settings.MINI_APP_URL}/stats/"),
                 ),
                 InlineKeyboardButton(
                     "History",
                     web_app=WebAppInfo(
-                        url=f"{settings.MINI_APP_URL}/tracking-history/"
+                        url=f"{settings.MINI_APP_URL}/history/"
                     ),
                 ),
             ],
@@ -202,7 +210,8 @@ def is_sub(callback):
                 )
             )
             await user.send_message(
-                messages.subscriber_message[client.lang], disable_web_page_preview=True
+                messages.subscriber_message[client.lang],
+                disable_web_page_preview=True,
             )
 
     return inner
@@ -216,7 +225,9 @@ async def update_price_limits() -> dict | None:
     headers = {"apikey": settings.CURRENCY_API_KEY}
     try:
         async with httpx.AsyncClient() as client:
-            response = (await client.get(url, timeout=15, headers=headers)).json()
+            response = (
+                await client.get(url, timeout=15, headers=headers)
+            ).json()
     except httpx.TimeoutException:
         log.exception("Failed to receive currency rates from fixer.io")
         return
@@ -230,14 +241,17 @@ async def update_price_limits() -> dict | None:
     rates: Dict = response.get("rates")
     if rates:
         if rates["USD"] == 0:
-            log.info("Failed to parse currency rates -> USD rate equals to zero")
+            log.info(
+                "Failed to parse currency rates -> USD rate equals to zero"
+            )
             return
         async with get_async_session() as session:
             price_limits = (await session.scalars(select(PriceLimit))).all()
             for currency, rate in rates.items():
                 value = round(2000 * rate / rates["USD"], 2)
                 price_limit = next(
-                    filter(lambda p: p.currency == currency, price_limits), None
+                    filter(lambda p: p.currency == currency, price_limits),
+                    None,
                 )
                 if price_limit is None:
                     session.add(PriceLimit(currency, value, dt.datetime.now()))

@@ -1,6 +1,5 @@
 import datetime as dt
 from typing import List
-
 from typing import Self
 
 from sqlalchemy import (
@@ -36,7 +35,7 @@ class Client(Base):
 
     Attributes:
         name (str): telegram username
-        chat_id (str): telegram chat_id
+        chat_id (int): telegram chat_id
         currency (str): client currency
         item_limit (int): tracking item limit
         lang (str): client language
@@ -58,7 +57,12 @@ class Client(Base):
     tracking_records = relationship("TrackingRecord", lazy="write_only")
 
     def __init__(
-        self, name, chat_id, currency="USD", item_limit=DEFAULT_ITEM_LIMIT, lang="EN"
+        self,
+        name,
+        chat_id,
+        currency="USD",
+        item_limit=DEFAULT_ITEM_LIMIT,
+        lang="EN",
     ):
         self.name = name
         self.chat_id = chat_id
@@ -85,7 +89,9 @@ class Item(Base):
     """
 
     __tablename__ = "items"
-    id = mapped_column(Integer, primary_key=True, autoincrement=True, unique=True)
+    id = mapped_column(
+        Integer, primary_key=True, autoincrement=True, unique=True
+    )
     client_id = mapped_column(
         Integer, ForeignKey(Client.id), nullable=False, index=True
     )
@@ -141,11 +147,15 @@ class Deal(Base):
     """
 
     __tablename__ = "deals"
-    id = mapped_column(Integer, primary_key=True, autoincrement=True, unique=True)
+    id = mapped_column(
+        Integer, primary_key=True, autoincrement=True, unique=True
+    )
     client_id = mapped_column(
         Integer, ForeignKey(Client.id), nullable=False, index=True
     )
-    item_id = mapped_column(Integer, ForeignKey(Item.id), nullable=False, index=True)
+    item_id = mapped_column(
+        Integer, ForeignKey(Item.id), nullable=False, index=True
+    )
     deal_type = mapped_column(String, nullable=False, index=True)
     price = mapped_column(Float(precision=2), nullable=False)
     volume = mapped_column(Integer, nullable=False)
@@ -229,7 +239,10 @@ class Skin(Base):
             List[str]: list with item names.
         """
         q_cols = dict(
-            zip(self.quality.keys(), [self.fn, self.mw, self.ft, self.ww, self.bs])
+            zip(
+                self.quality.keys(),
+                [self.fn, self.mw, self.ft, self.ww, self.bs],
+            )
         )
         names = [
             f"{self.full_name} ({constants.WEAPON_QUALITY[k]})"
@@ -280,9 +293,13 @@ class Sticker(Base):
     name = mapped_column(String, nullable=False, index=True)  # TODO remove
     full_name = mapped_column(String, nullable=False, index=True)
     collection = mapped_column(String)  # TODO remove
-    tournament = mapped_column(String, nullable=True, default=None)  # TODO remove
+    tournament = mapped_column(
+        String, nullable=True, default=None
+    )  # TODO remove
 
-    def __init__(self, sticker_type, name, full_name, collection, tournament=None):
+    def __init__(
+        self, sticker_type, name, full_name, collection, tournament=None
+    ):
         self.sticker_type = sticker_type
         self.name = name
         self.full_name = full_name
@@ -314,10 +331,14 @@ class Price(Base):
         String, nullable=False, index=True, unique=False, primary_key=True
     )
     price = mapped_column(Float(precision=2), default=0.0)
-    currency = mapped_column(String, default="USD", index=True, primary_key=True)
+    currency = mapped_column(
+        String, default="USD", index=True, primary_key=True
+    )
     updated = mapped_column(DateTime, nullable=False)
 
-    __table_args__ = (UniqueConstraint("name", "currency", name="_name_currency_uc"),)
+    __table_args__ = (
+        UniqueConstraint("name", "currency", name="_name_currency_uc"),
+    )
 
     def __init__(self, name, price, updated, currency="USD"):
         self.name = name
@@ -357,4 +378,13 @@ class TrackingRecord(Base):
     currency = mapped_column(String, index=True, nullable=False)
     value = mapped_column(Float(precision=2), default=0.0)
     income = mapped_column(Float(precision=2), default=0.0)
-    measure_time = mapped_column(DateTime, nullable=False, server_default=func.now())
+    measure_time = mapped_column(
+        DateTime, nullable=False, server_default=func.now()
+    )
+
+
+class SearchItem(Base):
+    __tablename__ = "search_items"
+
+    name = mapped_column(String, primary_key=True)
+    image_url = mapped_column(String, nullable=False)

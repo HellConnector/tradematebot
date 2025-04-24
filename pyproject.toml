@@ -11,6 +11,7 @@ packages = [
     { include = "cs2-items-parser" },
     { include = "price-worker" },
     { include = "mini_app" },
+    { include = "mini_app_api" },
 ]
 
 [tool.poetry.dependencies]
@@ -20,13 +21,13 @@ asyncpg = "^0.29.0"
 apscheduler = "^3.10.1"
 alembic = "^1.10.3"
 python-dotenv = "^1.0.0"
-sqlalchemy = {version = "^2.0.27", extras = ["asyncio"]}
+sqlalchemy = {version = "^2.0.27", extras = ["asyncio", "mypy"]}
 httpx = "^0.27.0"
 
 [tool.poetry.group.dev.dependencies]
-ruff = "^0.0.262"
-black = "^24.3.0"
+ruff = "^0.9.3"
 memray = "^1.7.0"
+mypy = "^1.14.1"
 
 [tool.poetry.group.parser.dependencies]
 vdf = "^3.4"
@@ -36,26 +37,86 @@ fastapi = "^0.110.0"
 uvicorn = {version = "^0.28.0", extras = ["standard"]}
 jinja2 = "^3.1.6"
 python-multipart = "^0.0.9"
+sentry-sdk = {version = "^2.19.2", extras = ["fastapi"]}
 
 [tool.poetry.scripts]
 bot = "bot.main:run"
 mini-app = "mini_app.main:run"
 price-worker = "price-worker.main:run"
 items2db-worker = "cs2-items-parser.main:run"
+search-items-worker = "search-items-worker.main:run"
 alembic = "bot.db.command:run"
+mini-app-api = "mini_app_api.main:run"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.pyright]
-venvPath = "."
-venv = ".venv"
-python.analysis.useLibraryCodeForTypes = true
-# TODO remove when all issuies will be fixed
-reportOptionalMemberAccess = false
-reportOptionalSubscript = false
-reportGeneralTypeIssues = false
-
 [tool.ruff]
 target-version = "py311"
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+]
+
+# Same as Black.
+line-length = 79
+indent-width = 4
+
+[tool.ruff.lint]
+# Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`)  codes by default.
+# Unlike Flake8, Ruff doesn't enable pycodestyle warnings (`W`) or
+# McCabe complexity (`C901`) by default.
+select = ["E4", "E7", "E9", "F"]
+ignore = []
+
+# Allow fix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+exclude = [
+    '^file1\.py$',  # TOML literal string (single-quotes, no escaping necessary)
+    "^file2\\.py$",  # TOML basic string (double-quotes, backslash and other characters need escaping)
+]
+ignore_missing_imports = true
+plugins = ["sqlalchemy.ext.mypy.plugin"]

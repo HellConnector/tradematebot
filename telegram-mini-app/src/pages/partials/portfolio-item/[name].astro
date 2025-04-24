@@ -1,0 +1,39 @@
+---
+import { catchError } from "../../../utils";
+import PortfolioItemDrawer from "../../../components/PortfolioItemDrawer.astro";
+
+export const partial = true;
+const { name } = Astro.params;
+const decodedName = decodeURIComponent(name);
+const authorization = Astro.request.headers.get("Authorization");
+
+const { env } = Astro.locals.runtime;
+
+// Check if Authorization header exists
+if (!authorization) {
+  return Astro.redirect("/outside-telegram/");
+}
+
+const [error, item] = await catchError(
+  fetch(`${env.MINI_APP_API_URL}/portfolio/items/${decodedName}/details/`, {
+    headers: {
+      Authorization: authorization,
+    },
+  }).then((response) => {
+    if (response?.ok) {
+      return response.json();
+    } else {
+      return null;
+    }
+  }),
+);
+
+if (!item) {
+  Astro.response.headers.set(
+    "HX-Trigger",
+    JSON.stringify({ showErrorAlert: "Failed to load item details" }),
+  );
+}
+---
+
+{item && <PortfolioItemDrawer item={item} />}

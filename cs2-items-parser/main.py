@@ -107,7 +107,8 @@ def get_stickers(tokens: dict, sticker_kits: dict) -> set[str]:
             and "(Gold) | Cologne 2015" not in line
             and "(Gold) | Cluj-Napoca 2015" not in line
             and "(Gold) | MLG Columbus 2016" not in line
-            and "(Gold)  | MLG Columbus 2016" not in line  # double space (WTF Valve #1)
+            and "(Gold)  | MLG Columbus 2016"
+            not in line  # double space (WTF Valve #1)
             and "(Gold) | Cologne 2016" not in line
             and "(Gold) | Atlanta 2017" not in line
             and "All-Stars" not in line
@@ -116,12 +117,14 @@ def get_stickers(tokens: dict, sticker_kits: dict) -> set[str]:
 
 
 def get_charms(tokens: dict, items_game: dict) -> set[str]:
-
     keychain_defs = (
-        value.get("name") for value in items_game.get("keychain_definitions").values()
+        value.get("name")
+        for value in items_game.get("keychain_definitions").values()
     )
 
-    return set(tokens.get(f"keychain_{keychain}") for keychain in keychain_defs)
+    return set(
+        tokens.get(f"keychain_{keychain}") for keychain in keychain_defs
+    )
 
 
 def get_cases(tokens: dict) -> set[str]:
@@ -199,7 +202,8 @@ def get_viewer_passes(tokens: dict) -> set[str]:
         value
         for key, value in tokens.items()
         if re.search(
-            r"(CSGO_TournamentPass)(?!.*(_Desc|_desc|_title|_tinyname|_charge))", key
+            r"(CSGO_TournamentPass)(?!.*(_Desc|_desc|_title|_tinyname|_charge))",
+            key,
         )
     )
 
@@ -216,7 +220,8 @@ def get_patches(sticker_kits: dict, tokens: dict) -> set[str]:
     return set(
         f"Patch | {tokens.get(item['item_name'].lstrip('#'))}"
         for item in sticker_kits.values()
-        if item["item_name"].startswith("#PatchKit") or "_teampatch_" in item["name"]
+        if item["item_name"].startswith("#PatchKit")
+        or "_teampatch_" in item["name"]
     )
 
 
@@ -339,8 +344,12 @@ def get_skins(
 
         return False
 
-    def parse_item(item, skin_key, prefab, item_lootlist: dict, all_prefabs) -> tuple:
-        is_souvenir = False if item_lootlist is None else has_souvenir(item_lootlist)
+    def parse_item(
+        item, skin_key, prefab, item_lootlist: dict, all_prefabs
+    ) -> tuple:
+        is_souvenir = (
+            False if item_lootlist is None else has_souvenir(item_lootlist)
+        )
 
         is_stattrak = "statted_item_base" in all_prefabs
 
@@ -348,7 +357,10 @@ def get_skins(
             item_lootlist
             and list(item_lootlist.keys())[0] in SOUVENIR_COLLECTIONS
             # # R8 Bone Mask has Souvenir (WTF Valve #2) and MP5-SD Lab Rat
-        ) or skin_key in ("weapon_revolver_sp_tape", "weapon_mp5sd_hy_labrat_mp5"):
+        ) or skin_key in (
+            "weapon_revolver_sp_tape",
+            "weapon_mp5sd_hy_labrat_mp5",
+        ):
             is_souvenir = True
 
         if (
@@ -364,7 +376,9 @@ def get_skins(
             is_stattrak = False
 
         market_name = get_market_name(item, prefab)
-        paintkit_name = get_paintkit_name(paintkit_value) if not is_default else None
+        paintkit_name = (
+            get_paintkit_name(paintkit_value) if not is_default else None
+        )
 
         return market_name, paintkit_name, is_stattrak, is_souvenir
 
@@ -384,14 +398,20 @@ def get_skins(
 
             is_glove = item_prefab == "hands_paintable"
             is_knife = item_prefab == "melee_unusual"
-            is_weapon = item["name"].startswith("weapon") if not is_knife else False
+            is_weapon = (
+                item["name"].startswith("weapon") if not is_knife else False
+            )
 
             if is_default and is_glove:
                 continue
             if is_weapon and is_default:
                 continue
 
-            skin_key = item["name"] if is_default else f"{item['name']}_{paintkit_key}"
+            skin_key = (
+                item["name"]
+                if is_default
+                else f"{item['name']}_{paintkit_key}"
+            )
 
             if not has_icon(skin_key):
                 continue
@@ -421,10 +441,14 @@ def get_skins(
                         all_skins.add(
                             f"★ StatTrak™ {market_name} | {paintkit_name} ({quality})"
                         )
-                    all_skins.add(f"★ {market_name} | {paintkit_name} ({quality})")
+                    all_skins.add(
+                        f"★ {market_name} | {paintkit_name} ({quality})"
+                    )
                 # Guns
                 if not is_knife and not is_glove and not is_default:
-                    all_skins.add(f"{market_name} | {paintkit_name} ({quality})")
+                    all_skins.add(
+                        f"{market_name} | {paintkit_name} ({quality})"
+                    )
                     if is_souvenir:
                         all_skins.add(
                             f"Souvenir {market_name} | {paintkit_name} ({quality})"
@@ -447,26 +471,34 @@ def get_skins(
             all_skins_dict[full_name]["skin_type"] = (
                 "glove" if is_glove else "knife" if is_knife else "gun"
             )
-            all_skins_dict[full_name][
-                "collection"
-            ] = None  # Unused field in database model TODO create migration to remove
+            all_skins_dict[full_name]["collection"] = (
+                None  # Unused field in database model TODO create migration to remove
+            )
             all_skins_dict[full_name]["name"] = market_name
             all_skins_dict[full_name]["skin"] = paintkit_name
             all_skins_dict[full_name]["full_name"] = full_name
             all_skins_dict[full_name]["fn"] = (
-                False if is_default and is_knife else "Factory New" in qualities
+                False
+                if is_default and is_knife
+                else "Factory New" in qualities
             )
             all_skins_dict[full_name]["mw"] = (
-                False if is_default and is_knife else "Minimal Wear" in qualities
+                False
+                if is_default and is_knife
+                else "Minimal Wear" in qualities
             )
             all_skins_dict[full_name]["ft"] = (
-                False if is_default and is_knife else "Field-Tested" in qualities
+                False
+                if is_default and is_knife
+                else "Field-Tested" in qualities
             )
             all_skins_dict[full_name]["ww"] = (
                 False if is_default and is_knife else "Well-Worn" in qualities
             )
             all_skins_dict[full_name]["bs"] = (
-                False if is_default and is_knife else "Battle-Scarred" in qualities
+                False
+                if is_default and is_knife
+                else "Battle-Scarred" in qualities
             )
             all_skins_dict[full_name]["st"] = (
                 True if is_stattrak and not is_souvenir else False
@@ -479,7 +511,9 @@ def get_skins(
 async def add_skins_to_database(skins: dict[str, dict]):
     added_count = 0
     async with get_async_session() as session:
-        current_db_skins = set((await session.scalars(select(Skin.full_name))).all())
+        current_db_skins = set(
+            (await session.scalars(select(Skin.full_name))).all()
+        )
         for skin in skins:
             if skin not in current_db_skins:
                 session.add(Skin.from_dict(skins[skin]))
@@ -510,7 +544,9 @@ async def add_patches_to_database(patches: set[str]):
         current_db_patches = set(
             (
                 await session.scalars(
-                    select(Sticker.full_name).where(Sticker.sticker_type == "patch")
+                    select(Sticker.full_name).where(
+                        Sticker.sticker_type == "patch"
+                    )
                 )
             ).all()
         )
@@ -529,7 +565,9 @@ async def add_charms_to_database(charms: set[str]):
         current_db_charms = set(
             (
                 await session.scalars(
-                    select(Sticker.full_name).where(Sticker.sticker_type == "charm")
+                    select(Sticker.full_name).where(
+                        Sticker.sticker_type == "charm"
+                    )
                 )
             ).all()
         )
@@ -548,7 +586,9 @@ async def add_stickers_to_database(stickers: set[str]):
         current_db_stickers = set(
             (
                 await session.scalars(
-                    select(Sticker.full_name).where(Sticker.sticker_type != "patch")
+                    select(Sticker.full_name).where(
+                        Sticker.sticker_type != "patch"
+                    )
                 )
             ).all()
         )
@@ -568,7 +608,9 @@ async def add_tools_to_database(
 ):
     added_count = 0
     async with get_async_session() as session:
-        current_db_tools = set((await session.scalars(select(Tool.name))).all())
+        current_db_tools = set(
+            (await session.scalars(select(Tool.name))).all()
+        )
         for tool in itertools.chain(keys, viewer_passes, operation_passes):
             if tool not in current_db_tools:
                 session.add(Tool(tool))
@@ -581,7 +623,9 @@ async def add_tools_to_database(
 async def add_agents_to_database(agents: dict[str, set]):
     added_count = 0
     async with get_async_session() as session:
-        current_db_agents = set((await session.scalars(select(Agent.name))).all())
+        current_db_agents = set(
+            (await session.scalars(select(Agent.name))).all()
+        )
         for side, agents_set in agents.items():
             for name in agents_set:
                 if name not in current_db_agents:
@@ -627,7 +671,9 @@ def save_to_file(filename: str, content: set[str]):
 
             with open(f"{filename}-{i}", "w", encoding="utf-8") as file:
                 file.write(
-                    "\n".join(next(content_iterator) for _ in range(iteration_count))
+                    "\n".join(
+                        next(content_iterator) for _ in range(iteration_count)
+                    )
                 )
 
 
@@ -637,7 +683,8 @@ def run():
     items_game = vdf.loads(items_game_text)["items_game"]
     csgo_english = vdf.loads(csgo_english_text)
     csgo_english_tokens_lower = {
-        key.lower(): value for key, value in csgo_english["lang"]["Tokens"].items()
+        key.lower(): value
+        for key, value in csgo_english["lang"]["Tokens"].items()
     }
     csgo_english_tokens = csgo_english["lang"]["Tokens"]
 

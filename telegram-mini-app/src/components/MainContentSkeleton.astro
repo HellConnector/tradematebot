@@ -1,0 +1,48 @@
+---
+
+---
+
+<div id="main-content-skeleton" class="htmx-indicator spinner-container">
+  <div class="spinner"></div>
+</div>
+
+<style>
+  .spinner-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--tg-theme-bg-color);
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    border-top-color: var(--tg-theme-button-color);
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Dark theme adjustments */
+  @media (prefers-color-scheme: dark) {
+    .spinner {
+      border-color: rgba(255, 255, 255, 0.1);
+      border-top-color: var(--tg-theme-button-color);
+    }
+  }
+</style>

@@ -88,7 +88,9 @@ def is_valid_raw_init_data(authorization: Annotated[RawInitData, Header()]):
 
     pairs = {
         key: value
-        for key, value in map(lambda x: x.split("="), string_init_data.split("&"))
+        for key, value in map(
+            lambda x: x.split("="), string_init_data.split("&")
+        )
     }
     # Alphabetically sorted by keys
     data_check_string = "\n".join(
@@ -179,7 +181,9 @@ async def load_stats(
 
 @app.get("/tracking/load/", response_class=HTMLResponse)
 async def load_tracking(
-    request: Request, authorization: Annotated[str, Header()], sort: str | None = None
+    request: Request,
+    authorization: Annotated[str, Header()],
+    sort: str | None = None,
 ) -> HTMLResponse:
     if not is_valid_raw_init_data(
         raw_init_data := RawInitData(init_data=authorization)
@@ -236,17 +240,23 @@ async def load_tracking(
 
 @app.get("/stats/", response_class=HTMLResponse)
 async def stats(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("stats.html", context={"request": request})
+    return templates.TemplateResponse(
+        "stats.html", context={"request": request}
+    )
 
 
 @app.get("/tracking/", response_class=HTMLResponse)
 async def tracking(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("tracking.html", context={"request": request})
+    return templates.TemplateResponse(
+        "tracking.html", context={"request": request}
+    )
 
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("index.html", context={"request": request})
+    return templates.TemplateResponse(
+        "index.html", context={"request": request}
+    )
 
 
 @app.get("/favicon.ico", include_in_schema=False)
@@ -290,7 +300,9 @@ async def load_tracking_history(
         )
 
     if not tracking_records["values"]:
-        return templates.TemplateResponse("404.html", context={"request": request})
+        return templates.TemplateResponse(
+            "404.html", context={"request": request}
+        )
 
     items = [
         {"label": label, "value": value, "income": income}
@@ -307,18 +319,26 @@ async def load_tracking_history(
             "request": request,
             "items": items,
             "max_value": (
-                max(tracking_records["values"]) if tracking_records["values"] else 1
+                max(tracking_records["values"])
+                if tracking_records["values"]
+                else 1
             ),
             "min_value": (
-                min(tracking_records["values"]) if tracking_records["values"] else 0
+                min(tracking_records["values"])
+                if tracking_records["values"]
+                else 0
             ),
             "currency": CURRENCY[client.currency],
             "diff": (
                 diff := round(
-                    tracking_records["values"][-1] - tracking_records["values"][0], 2
+                    tracking_records["values"][-1]
+                    - tracking_records["values"][0],
+                    2,
                 )
             ),
-            "diff_percent": round(100 * diff / tracking_records["values"][0], 2),
+            "diff_percent": round(
+                100 * diff / tracking_records["values"][0], 2
+            ),
             "price_color": "text-green-600" if diff >= 0 else "text-red-600",
             "arrow": (
                 "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"

@@ -3,7 +3,7 @@ all: build_image
 include .env
 
 PYTHON_VERSION = 3.11-slim-buster
-POETRY_VERSION = 1.8.2
+POETRY_VERSION = 1.8.5
 IMAGE_NAME = hellconnector/tradematebot
 IMAGE_TAG = $(PYTHON_VERSION)
 PLATFORM = linux/amd64
@@ -34,3 +34,7 @@ run_price_worker:
 .PHONY: run_items2db_worker
 run_items2db_worker:
 	poetry run items2db-worker
+
+.PHONY: run_mini_app_api
+run_mini_app:
+	poetry run mini-app-api

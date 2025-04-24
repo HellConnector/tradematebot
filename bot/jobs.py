@@ -16,7 +16,9 @@ async def update_price_limits(context: ContextTypes.DEFAULT_TYPE):
             limits = {
                 "price_limits": {
                     limit.currency: round(limit.value, 2)
-                    for limit in (await session.scalars(select(PriceLimit))).all()
+                    for limit in (
+                        await session.scalars(select(PriceLimit))
+                    ).all()
                 }
             }
     store_price_limits_in_bot_data(context, limits)
@@ -51,7 +53,8 @@ async def send_notifications(context: ContextTypes.DEFAULT_TYPE):
                 select(Client).where(Client.chat_id == chat_id)
             )
             items_data = [
-                i[1:] for i in filter(lambda x: x[0] == chat_id, take_profit_data)
+                i[1:]
+                for i in filter(lambda x: x[0] == chat_id, take_profit_data)
             ]
             items_str = "\n".join(
                 f"{i + 1}) `{utils.get_short_name(d[1])}`:\n`{d[2]} {d[0]}` ⇒ "
@@ -63,7 +66,9 @@ async def send_notifications(context: ContextTypes.DEFAULT_TYPE):
             # Sending message
             try:
                 await context.bot.send_message(
-                    chat_id=chat_id, text=message, reply_markup=ReplyKeyboardRemove()
+                    chat_id=chat_id,
+                    text=message,
+                    reply_markup=ReplyKeyboardRemove(),
                 )
             except Exception:
                 log.info(f"Failed to send message to chat [{chat_id}]")
@@ -71,7 +76,9 @@ async def send_notifications(context: ContextTypes.DEFAULT_TYPE):
             # Turning notification flag to False
             client_items = (
                 await session.scalars(
-                    client.items.select().where(Item.name.in_(x[1] for x in items_data))
+                    client.items.select().where(
+                        Item.name.in_(x[1] for x in items_data)
+                    )
                 )
             ).all()
             for item in client_items:
@@ -84,6 +91,9 @@ async def update_tracking_records(context: ContextTypes.DEFAULT_TYPE):
         for client_id, currency, value, income in tracking_records:
             session.add(
                 TrackingRecord(
-                    client_id=client_id, currency=currency, value=value, income=income
+                    client_id=client_id,
+                    currency=currency,
+                    value=value,
+                    income=income,
                 )
             )
