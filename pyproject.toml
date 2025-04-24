@@ -10,7 +10,6 @@ packages = [
     { include = "bot" },
     { include = "cs2-items-parser" },
     { include = "price-worker" },
-    { include = "mini_app" },
     { include = "mini_app_api" },
 ]
 
@@ -41,7 +40,6 @@ sentry-sdk = {version = "^2.19.2", extras = ["fastapi"]}
 
 [tool.poetry.scripts]
 bot = "bot.main:run"
-mini-app = "mini_app.main:run"
 price-worker = "price-worker.main:run"
 items2db-worker = "cs2-items-parser.main:run"
 search-items-worker = "search-items-worker.main:run"

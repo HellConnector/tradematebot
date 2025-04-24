@@ -142,7 +142,6 @@ dmypy.json
 /bot/persistence
 /persistence
 
-mini-app/.cert
-mini_app/.cert
+.cert
 
 **/.DS_Store
