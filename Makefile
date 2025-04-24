@@ -23,10 +23,6 @@ upload_image:
 run_bot:
 	poetry run bot
 
-.PHONY: run_mini_app
-run_mini_app:
-	poetry run mini-app
-
 .PHONY: run_price_worker
 run_price_worker:
 	poetry run price-worker
@@ -36,5 +32,5 @@ run_items2db_worker:
 	poetry run items2db-worker
 
 .PHONY: run_mini_app_api
-run_mini_app:
+run_mini_app_api:
 	poetry run mini-app-api

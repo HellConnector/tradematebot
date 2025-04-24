@@ -26,7 +26,6 @@ COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 COPY bot ./app/bot
 COPY cs2-items-parser ./app/cs2-items-parser
 COPY price-worker ./app/price-worker
-COPY mini_app ./app/mini_app
 COPY search-items-worker ./app/search-items-worker
 COPY mini_app_api ./app/mini_app_api
 
