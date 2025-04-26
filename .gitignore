@@ -145,3 +145,4 @@ dmypy.json
 .cert
 
 **/.DS_Store
+**/.dev.vars
