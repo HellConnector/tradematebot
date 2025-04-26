@@ -82,13 +82,13 @@ help_message = {
 menu_message = {
     RU: "`Deals` ⇒ для добавления новой сделки.\n`Notifications` ⇒ настройка уведомлений по "
     "предметам.\n`Stats` ⇒ раздел статистики.\n"
-    "`Tracking` ⇒ вызов таблицы с данными о ваших сделках (цены, "
+    "`Portfolio` ⇒ вызов таблицы с данными о ваших сделках (цены, "
     "прибыль и т.д.).\n\n"
     "Наберите /help, если хотите узнать больше о возможностях бота, или есть вопросы "
     "по его работе.",
     EN: "`Deals` ⇒ use this button if you want to add a new deal.\n`Notifications` ⇒ "
     "notifications settings for items.\n`Stats` ⇒ show statistics.\n"
-    "`Tracking` ⇒ use this button if you want to see info about your added deals (prices, "
+    "`Portfolio` ⇒ use this button if you want to see info about your added deals (prices, "
     "profits, hold days, etc.)\n\n"
     "Enter /help if you want to know more about bot's features or need help.",
 }
