@@ -247,32 +247,27 @@ if (name && authorization) {
 }
 
 <script>
-  // Set up back button
   window.app.BackButton.show();
   window.app.BackButton.onClick(() => {
     window.app.BackButton.hide();
     window.location.href = "/portfolio/";
   });
 
-  // Configure MainButton for form submission
   const mainButton = window.app.MainButton;
   mainButton.setText("Add");
   mainButton.color = "rgb(49, 181, 69)";
   mainButton.hasShineEffect = true;
   mainButton.show();
 
-  // Configure SecondaryButton for cancel action
   const secondaryButton = window.app.SecondaryButton;
   secondaryButton.setText("Cancel");
   secondaryButton.textColor = window.app.themeParams.destructive_text_color;
   secondaryButton.show();
 
-  // Set up SecondaryButton click handler to navigate to portfolio
   secondaryButton.onClick(() => {
     window.location.href = "/portfolio/";
   });
 
-  // Set up MainButton click handler to submit the form
   mainButton.onClick(() => {
     const selectedItemName = document.getElementById("selected-item-name");
     const dealType = document.querySelector(
@@ -285,7 +280,6 @@ if (name && authorization) {
       "deal-volume",
     ) as HTMLInputElement;
 
-    // Validate required fields
     if (!selectedItemName || !selectedItemName.textContent) {
       window.app.showAlert("Please select an item");
       return;
@@ -317,7 +311,6 @@ if (name && authorization) {
     }
   };
 
-  // Handle search input clear button
   const searchInput = document.getElementById(
     "deal-search",
   ) as HTMLInputElement;
@@ -341,11 +334,9 @@ if (name && authorization) {
   }
 
   window.selectSearchItem = function (element) {
-    // Get the item name and image URL from the clicked element
     const itemName = element.querySelector("span").textContent;
     const itemImage = element.querySelector("img").src;
 
-    // Get the search input and clear button
     const searchInput = document.getElementById("deal-search");
     const clearButton = document.getElementById("deal-clear-search");
     const searchResults = document.getElementById("deal-search-results");
@@ -371,14 +362,12 @@ if (name && authorization) {
       }, 100);
     }
 
-    // Display the selected item
     if (selectedItemContainer && selectedItemImage && selectedItemName) {
       selectedItemImage.src = itemImage;
       selectedItemImage.alt = itemName;
       selectedItemName.textContent = itemName;
       selectedItemContainer.style.display = "block";
 
-      // Create a hidden input to store the selected item name for form submission
       let hiddenInput = document.getElementById("selected-item-name-input");
       if (!hiddenInput) {
         hiddenInput = document.createElement("input");

@@ -20,7 +20,7 @@ asyncpg = "^0.29.0"
 apscheduler = "^3.10.1"
 alembic = "^1.10.3"
 python-dotenv = "^1.0.0"
-sqlalchemy = {version = "^2.0.27", extras = ["asyncio", "mypy"]}
+sqlalchemy = { version = "^2.0.27", extras = ["asyncio", "mypy"] }
 httpx = "^0.27.0"
 
 [tool.poetry.group.dev.dependencies]
@@ -33,10 +33,10 @@ vdf = "^3.4"
 
 [tool.poetry.group.mini-app.dependencies]
 fastapi = "^0.110.0"
-uvicorn = {version = "^0.28.0", extras = ["standard"]}
+uvicorn = { version = "^0.28.0", extras = ["standard"] }
 jinja2 = "^3.1.6"
 python-multipart = "^0.0.9"
-sentry-sdk = {version = "^2.19.2", extras = ["fastapi"]}
+sentry-sdk = { version = "^2.19.2", extras = ["fastapi"] }
 
 [tool.poetry.scripts]
 bot = "bot.main:run"
@@ -114,7 +114,7 @@ warn_return_any = true
 warn_unused_configs = true
 exclude = [
     '^file1\.py$',  # TOML literal string (single-quotes, no escaping necessary)
-    "^file2\\.py$",  # TOML basic string (double-quotes, backslash and other characters need escaping)
+    "^file2\\.py$", # TOML basic string (double-quotes, backslash and other characters need escaping)
 ]
 ignore_missing_imports = true
 plugins = ["sqlalchemy.ext.mypy.plugin"]

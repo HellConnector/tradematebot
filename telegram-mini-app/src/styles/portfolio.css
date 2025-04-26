@@ -261,6 +261,127 @@
     font-weight: 600
 }
 
+.portfolio-header-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--tg-spacing-sm);
+    width: 100%
+}
+
+.sort-buttons-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sort-type-button {
+    background-color: var(--tg-theme-secondary-bg-color);
+    color: var(--tg-theme-text-color);
+    border: none;
+    border-radius: 18px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all .2s ease;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+    font-weight: 500;
+}
+
+@media (hover: hover) {
+    .sort-type-button:hover {
+        background-color: var(--tg-theme-button-color);
+        color: var(--tg-theme-button-text-color);
+    }
+}
+
+.sort-type-button:active {
+    background-color: var(--tg-theme-button-color);
+    color: var(--tg-theme-button-text-color);
+}
+
+.sort-type-button.active {
+    background-color: var(--tg-theme-button-color);
+    color: var(--tg-theme-button-text-color);
+}
+
+.sort-direction-button {
+    background-color: var(--tg-theme-secondary-bg-color);
+    color: var(--tg-theme-text-color);
+    border: none;
+    border-radius: 18px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all .2s ease;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: hover) {
+    .sort-direction-button:hover {
+        background-color: var(--tg-theme-button-color);
+        color: var(--tg-theme-button-text-color);
+    }
+}
+
+.sort-direction-button:active {
+    background-color: var(--tg-theme-button-color);
+    color: var(--tg-theme-button-text-color);
+}
+
+.sort-direction-button:focus {
+    background-color: var(--tg-theme-button-color);
+    color: var(--tg-theme-button-text-color);
+    outline: none;
+}
+
+.sort-lines-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 20px;
+    height: 20px;
+    justify-content: space-between;
+}
+
+.sort-line {
+    height: 2px;
+    background-color: currentColor;
+    border-radius: 1px;
+}
+
+.sort-line-long {
+    width: 16px;
+}
+
+.sort-line-medium-long {
+    width: 14px;
+}
+
+.sort-line-medium {
+    width: 12px;
+}
+
+.sort-line-medium-short {
+    width: 10px;
+}
+
+.sort-line-short {
+    width: 8px;
+}
+
+.sort-direction-button.asc .sort-lines-container {
+    flex-direction: column-reverse;
+}
+
 .portfolio-items {
     display: flex;
     flex-direction: column;

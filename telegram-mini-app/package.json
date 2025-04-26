@@ -6,7 +6,8 @@
     "dev": "NODE_TLS_REJECT_UNAUTHORIZED=0 astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "deploy": "wrangler pages deploy ./dist --branch=main"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^12.5.0",

@@ -36,7 +36,10 @@ const {
     >
       {name}
     </h3>
-    <div class={`item-quantity-badge ${count < 10 ? "single-digit" : ""}`}>
+    <div
+      class={`item-quantity-badge ${count < 10 ? "single-digit" : ""}`}
+      data-value={count}
+    >
       {count}
     </div>
   </div>
@@ -62,7 +65,8 @@ const {
       <div class="item-detail">
         <span class="detail-label">Profit %:</span>
         <span
-          class={`detail-value detail-value-custom ${incomePercentage >= 0 ? "profit-positive" : "profit-negative"}`}
+          class={`detail-value detail-value-custom income-percentage ${incomePercentage >= 0 ? "profit-positive" : "profit-negative"}`}
+          data-value={incomePercentage}
         >
           {incomePercentage >= 0 ? "+" : ""}{incomePercentage}%
         </span>
@@ -70,7 +74,8 @@ const {
       <div class="item-detail">
         <span class="detail-label">Profit:</span>
         <span
-          class={`detail-value detail-value-custom ${incomeAmount >= 0 ? "profit-positive" : "profit-negative"}`}
+          class={`detail-value detail-value-custom income-amount ${incomeAmount >= 0 ? "profit-positive" : "profit-negative"}`}
+          data-value={incomeAmount}
         >
           {incomeAmount >= 0 ? "+" : ""}{incomeAmount}
           {currency}
@@ -82,7 +87,6 @@ const {
 
 <script>
   window.showDrawer = function () {
-    // Always reset the drawer content scroll position to top
     const drawerContent = document.getElementById("drawer-content");
     if (drawerContent) {
       drawerContent.scrollTop = 0;
@@ -90,17 +94,13 @@ const {
 
     const drawer = document.getElementById("drawer");
 
-    // Show the drawer if it's not already open
     if (!drawer?.classList.contains("open")) {
-      // Save the current scroll position
       const scrollY = window.scrollY;
 
-      // Apply a fixed position to the body to prevent scrolling
       document.body.style.position = "fixed";
       document.body.style.top = `-${scrollY}px`;
       document.body.style.width = "100%";
 
-      // Store the scroll position to restore it later
       document.body.dataset.scrollY = scrollY;
 
       drawer?.classList.add("open");
@@ -109,7 +109,6 @@ const {
         window.app.disableVerticalSwipes();
       }
     }
-    // Always update the secondary button
     window.app.SecondaryButton.setText("Hide");
     window.app.SecondaryButton.onClick(window.hideDrawer);
     if (!window.app.SecondaryButton.isVisible) {
@@ -125,23 +124,21 @@ const {
 
     if (window.app.SecondaryButton.isVisible) {
       window.app.SecondaryButton.hide();
+      window.app.SecondaryButton.offClick();
     }
     document.getElementById("drawer")?.classList.remove("open");
     document.getElementById("overlay")?.classList.remove("active");
 
-    // Restore scrolling
     const scrollY = document.body.dataset.scrollY;
     document.body.style.position = "";
     document.body.style.top = "";
     document.body.style.width = "";
     window.scrollTo(0, parseInt(scrollY || "0"));
 
-    // Only enable vertical swipes if the add deal drawer is not open
     if (!window.app.isVerticalSwipesEnabled) {
       window.app.enableVerticalSwipes();
     }
 
-    // Reset the MainButton to its default behavior
     window.app.MainButton.offClick();
     window.app.MainButton.setText("Add deal");
     window.app.MainButton.onClick(() => {

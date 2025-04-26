@@ -9,7 +9,6 @@ const authorization = Astro.request.headers.get("Authorization");
 
 const { env } = Astro.locals.runtime;
 
-// Check if Authorization header exists
 if (!authorization) {
   return Astro.redirect("/outside-telegram/");
 }
@@ -27,13 +26,6 @@ const [error, item] = await catchError(
     }
   }),
 );
-
-if (!item) {
-  Astro.response.headers.set(
-    "HX-Trigger",
-    JSON.stringify({ showErrorAlert: "Failed to load item details" }),
-  );
-}
 ---
 
 {item && <PortfolioItemDrawer item={item} />}

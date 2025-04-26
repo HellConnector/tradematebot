@@ -60,52 +60,98 @@ if (error) {
               <div
                 class={`summary-value ${portfolioSummary.profit >= 0 ? "profit-positive" : "profit-negative"}`}
               >
-                {portfolioSummary.profit >= 0 ? "+" : ""}
-                {portfolioSummary.profit.toFixed(2)}{" "}
-                {portfolioSummary.items[0].currency}
+                {(portfolioSummary.profit >= 0 ? "+" : "-") +
+                  portfolioSummary.profit.toFixed(2) +
+                  " " +
+                  portfolioSummary.items[0].currency}
               </div>
             </div>
           </div>
-          <div class="search-input-container">
-            <input
-              type="text"
-              id="portfolio-search"
-              class="telegram-search-input"
-              placeholder="Type item name to filter the list"
-              autocomplete="off"
-              value={nameFilter}
-            />
-            <div class="search-icon">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+          <div class="portfolio-header-actions">
+            <div class="search-input-container">
+              <input
+                type="text"
+                id="portfolio-search"
+                class="telegram-search-input"
+                placeholder="Type item name"
+                autocomplete="off"
+                value={nameFilter}
+              />
+              <div class="search-icon">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+              </div>
+              <div
+                class="clear-icon"
+                id="clear-search"
+                style={nameFilter ? "display: flex;" : "display: none"}
               >
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </div>
             </div>
-            <div class="clear-icon" id="clear-search" style="display: none;">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+            <div class="sort-buttons-container">
+              <button
+                id="sort-percentage-button"
+                class="sort-type-button active"
+                title="Sort by percentage"
+                data-sort-by="percentage"
               >
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
+                %
+              </button>
+              <button
+                id="sort-value-button"
+                class="sort-type-button"
+                title="Sort by value"
+                data-sort-by="value"
+              >
+                {portfolioSummary.items[0].currency}
+              </button>
+              <button
+                id="sort-count-button"
+                class="sort-type-button"
+                title="Sort by count"
+                data-sort-by="count"
+              >
+                №
+              </button>
+              <button
+                id="sort-direction-button"
+                class="sort-direction-button"
+                title="Toggle sort direction"
+              >
+                <div class="sort-lines-container">
+                  <div class="sort-line sort-line-long" />
+                  <div class="sort-line sort-line-medium-long" />
+                  <div class="sort-line sort-line-medium" />
+                  <div class="sort-line sort-line-medium-short" />
+                  <div class="sort-line sort-line-short" />
+                </div>
+              </button>
             </div>
           </div>
         </header>
@@ -171,31 +217,29 @@ if (error) {
     const clearButton = document.getElementById("clear-search");
     const portfolioItems = document.querySelectorAll(".portfolio-item");
 
-    if (!searchInput || !clearButton || portfolioItems.length === 0) {
-      // Elements not found yet, try again after a short delay
-      setTimeout(window.initializeFilter, 100);
-      return;
-    }
-
     function filterItems(query) {
-      const normalizedQuery = query.toLowerCase().trim();
+      const queryWords = query
+        .toLowerCase()
+        .trim()
+        .split(/\s+/)
+        .filter((word) => word.length > 0);
 
       portfolioItems.forEach((item) => {
         const itemNameElement = item.querySelector(".clickable-item-name");
         if (!itemNameElement) return;
 
-        const itemName = itemNameElement.textContent.toLowerCase();
+        const itemName = itemNameElement.textContent?.toLowerCase();
 
-        if (normalizedQuery === "" || itemName.includes(normalizedQuery)) {
-          item.style.display = "";
-        } else {
-          item.style.display = "none";
-        }
+        const shouldDisplay =
+          queryWords.length === 0 ||
+          queryWords.every((word) => itemName?.includes(word));
+
+        item.style.display = shouldDisplay ? "" : "none";
       });
     }
 
-    searchInput.addEventListener("input", () => {
-      if (searchInput.value.trim() !== "") {
+    searchInput?.addEventListener("input", () => {
+      if (searchInput?.value.trim() !== "") {
         clearButton.style.display = "flex";
       } else {
         clearButton.style.display = "none";
@@ -203,7 +247,7 @@ if (error) {
       filterItems(searchInput.value);
     });
 
-    clearButton.addEventListener("click", () => {
+    clearButton?.addEventListener("click", () => {
       searchInput.value = "";
       clearButton.style.display = "none";
       filterItems("");
@@ -212,88 +256,106 @@ if (error) {
 
   window.initializeFilter();
 
-  window.applyInitialFilter = function () {
-    const searchInput = document.getElementById("portfolio-search");
-    const clearButton = document.getElementById("clear-search");
+  window.initializeSort = function () {
+    const sortDirectionButton = document.getElementById(
+      "sort-direction-button",
+    );
+    const sortPercentageButton = document.getElementById(
+      "sort-percentage-button",
+    );
+    const sortValueButton = document.getElementById("sort-value-button");
+    const sortCountButton = document.getElementById("sort-count-button");
+    const portfolioItems = document.querySelectorAll(".portfolio-item");
+    const portfolioItemsContainer = document.querySelector(".portfolio-items");
 
-    if (!searchInput || !clearButton) {
-      setTimeout(window.applyInitialFilter, 100);
-      return;
+    let currentSortBy = "percentage";
+    let isAscending = false;
+
+    function sortPortfolioItems(sortBy, ascending = false) {
+      console.log(sortBy);
+      const selectors = {
+        percentage: ".income-percentage",
+        count: ".item-quantity-badge",
+        value: ".income-amount",
+      };
+      const selector = selectors[sortBy] || selectors.value;
+      const itemsArray = Array.from(portfolioItems);
+
+      itemsArray.sort((a, b) => {
+        const valueA =
+          parseFloat(a.querySelector(selector)?.dataset.value) || 0;
+        const valueB =
+          parseFloat(b.querySelector(selector)?.dataset.value) || 0;
+
+        return ascending ? valueA - valueB : valueB - valueA;
+      });
+
+      itemsArray.forEach((item) => portfolioItemsContainer?.appendChild(item));
     }
 
-    if (searchInput.value.trim() !== "") {
-      clearButton.style.display = "flex";
-      // Trigger the filtering function with the initial value
-      const event = new Event("input", { bubbles: true });
-      searchInput.dispatchEvent(event);
+    function updateActiveSortButton(sortBy) {
+      const sortButtons = {
+        percentage: sortPercentageButton,
+        value: sortValueButton,
+        count: sortCountButton,
+      };
+
+      Object.values(sortButtons).forEach((button) =>
+        button?.classList.remove("active"),
+      );
+
+      sortButtons[sortBy]?.classList.add("active");
     }
+
+    sortDirectionButton?.addEventListener("click", () => {
+      isAscending = !isAscending;
+      if (isAscending) {
+        sortDirectionButton.classList.add("asc");
+      } else {
+        sortDirectionButton.classList.remove("asc");
+      }
+      sortPortfolioItems(currentSortBy, isAscending);
+    });
+
+    sortPercentageButton?.addEventListener("click", () => {
+      currentSortBy = "percentage";
+      updateActiveSortButton(currentSortBy);
+      sortPortfolioItems(currentSortBy, isAscending);
+    });
+
+    sortValueButton?.addEventListener("click", () => {
+      currentSortBy = "value";
+      updateActiveSortButton(currentSortBy);
+      sortPortfolioItems(currentSortBy, isAscending);
+    });
+
+    sortCountButton?.addEventListener("click", () => {
+      currentSortBy = "count";
+      updateActiveSortButton(currentSortBy);
+      sortPortfolioItems(currentSortBy, isAscending);
+    });
   };
 
-  window.applyInitialFilter();
-
-  const mainButtonColor = "rgb(49, 181, 69)";
-
-  document.body.addEventListener("htmx:afterSwap", function (evt) {
-    if (
-      evt.detail.target.querySelector(".portfolio-item") ||
-      evt.detail.target.querySelector(".empty-portfolio")
-    ) {
-      if (evt.detail.target.querySelector(".portfolio-item")) {
-        window.initializeFilter();
-        window.applyInitialFilter();
-        window.app.MainButton.hasShineEffect = false;
-      }
-
-      if (evt.detail.target.querySelector(".empty-portfolio")) {
-        window.app.MainButton.hasShineEffect = true;
-      }
-
-      window.app.BackButton.hide();
-
-      window.app.MainButton.offClick();
-      window.app.MainButton.setText("Add deal");
-      window.app.MainButton.color = mainButtonColor;
-      window.app.MainButton.onClick(() => {
-        window.location.href = "/add-deal/";
-      });
-      window.app.MainButton.show();
-    }
-
-    if (
-      evt.detail.target.id === "item-details-container" &&
-      evt.detail.target.querySelector(".drawer-item-details")
-    ) {
-      const itemDetails = evt.detail.target.querySelector(
-        ".drawer-item-details",
-      );
-      const itemName =
-        itemDetails.querySelector(".drawer-item-title").textContent;
-
-      window.app.MainButton.offClick();
-      window.app.MainButton.setText("Add deal");
-      window.app.MainButton.color = mainButtonColor;
-      window.app.MainButton.onClick(() => {
-        window.location.href = `/add-deal/?name=${encodeURIComponent(itemName)}`;
-      });
-    }
-  });
+  window.initializeSort();
 
   window.app.BackButton.hide();
 
   window.app.MainButton.setText("Add deal");
-  window.app.MainButton.color = mainButtonColor;
+  window.app.MainButton.onClick(() => {
+    const drawer = document.getElementById("drawer");
+    const itemName = drawer?.classList.contains("open")
+      ? drawer.querySelector("h2[class='drawer-item-title']")?.textContent
+      : null;
+
+    window.location.href = itemName
+      ? `/add-deal/?name=${encodeURIComponent(itemName)}`
+      : "/add-deal/";
+  });
+  window.app.MainButton.color = "rgb(49, 181, 69)";
   window.app.MainButton.show();
 
-  const emptyPortfolio = document.querySelector(".empty-portfolio");
-  if (emptyPortfolio) {
-    window.app.MainButton.hasShineEffect = true;
-  } else {
-    window.app.MainButton.hasShineEffect = false;
-  }
-
-  window.app.MainButton.onClick(() => {
-    window.location.href = "/add-deal/";
-  });
+  window.app.MainButton.hasShineEffect =
+    !!document.querySelector(".empty-portfolio");
 
   window.handleOverlayClick = function () {
     const isItemDetailsDrawerOpen = document
