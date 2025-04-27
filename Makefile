@@ -41,4 +41,4 @@ clean:
 
 .PHONY: prepare_dev
 prepare_dev: clean
-	uv sync --all-extras  --compile-bytecode --all-groups --frozen
+	uv sync --all-extras --compile-bytecode --all-groups --frozen

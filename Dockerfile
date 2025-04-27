@@ -22,8 +22,8 @@ ENV PATH "${PATH}:/usr/local/bin"
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
 COPY bot ./app/bot
-COPY price-worker ./app/price-worker
-COPY search-items-worker ./app/search-items-worker
+COPY price_worker ./app/price_worker
+COPY search_items_worker ./app/search_items_worker
 COPY mini_app_api ./app/mini_app_api
 
 ENTRYPOINT ["python", "-m", "bot.main" ]

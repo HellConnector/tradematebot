@@ -19,9 +19,8 @@ dependencies = [
 
 [project.scripts]
 bot = "bot.main:run"
-price-worker = "price-worker.main:run"
-items2db-worker = "cs2-items-parser.main:run"
-search-items-worker = "search-items-worker.main:run"
+price-worker = "price_worker.main:run"
+search-items-worker = "search_items_worker.main:run"
 alembic = "bot.db.command:run"
 mini-app-api = "mini_app_api.main:run"
 
