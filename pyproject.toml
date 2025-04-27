@@ -1,57 +1,62 @@
-[tool.poetry]
+[project]
 name = "tradematebot"
 version = "0.1.0"
 description = "Telegram Bot that helps to monitor and track CS2 investments"
-authors = ["HellConnector <kavai.barbarian@gmail.com>"]
-license = "Apache License 2.0"
+authors = [{ name = "HellConnector", email = "kavai.barbarian@gmail.com" }]
+requires-python = "~=3.13"
 readme = "README.md"
-
-packages = [
-    { include = "bot" },
-    { include = "cs2-items-parser" },
-    { include = "price-worker" },
-    { include = "mini_app_api" },
+license = "Apache-2.0"
+dependencies = [
+    "python-telegram-bot==22.0",
+    "asyncpg==0.30",
+    "apscheduler>=3.10.1,<4",
+    "alembic>=1.10.3,<2",
+    "python-dotenv>=1.0.0,<2",
+    "sqlalchemy[asyncio, mypy]>=2.0.27,<3",
+    "httpx==0.28.1",
+    "hatchling>=1.27.0",
 ]
 
-[tool.poetry.dependencies]
-python = "^3.11"
-python-telegram-bot = "^21.0.1"
-asyncpg = "^0.29.0"
-apscheduler = "^3.10.1"
-alembic = "^1.10.3"
-python-dotenv = "^1.0.0"
-sqlalchemy = { version = "^2.0.27", extras = ["asyncio", "mypy"] }
-httpx = "^0.27.0"
-
-[tool.poetry.group.dev.dependencies]
-ruff = "^0.9.3"
-memray = "^1.7.0"
-mypy = "^1.14.1"
-
-[tool.poetry.group.parser.dependencies]
-vdf = "^3.4"
-
-[tool.poetry.group.mini-app.dependencies]
-fastapi = "^0.110.0"
-uvicorn = { version = "^0.28.0", extras = ["standard"] }
-jinja2 = "^3.1.6"
-python-multipart = "^0.0.9"
-sentry-sdk = { version = "^2.19.2", extras = ["fastapi"] }
-
-[tool.poetry.scripts]
+[project.scripts]
 bot = "bot.main:run"
-price-worker = "price-worker.main:run"
-items2db-worker = "cs2-items-parser.main:run"
-search-items-worker = "search-items-worker.main:run"
+price-worker = "price_worker.main:run"
+search-items-worker = "search_items_worker.main:run"
 alembic = "bot.db.command:run"
 mini-app-api = "mini_app_api.main:run"
 
+[dependency-groups]
+dev = [
+    "ruff==0.11.7",
+    "mypy>=1.14.1,<2",
+]
+parser = ["vdf~=3.4"]
+mini-app = [
+    "fastapi>=0.110.0,<0.111",
+    "uvicorn[standard]>=0.28.0,<0.29",
+    "python-multipart>=0.0.9,<0.0.10",
+    "sentry-sdk[fastapi]>=2.19.2,<3",
+]
+
+[tool.uv]
+default-groups = [
+    "parser",
+    "mini-app",
+]
+
+[tool.hatch.build.targets.wheel]
+include = [
+    "bot",
+    "price-worker",
+    "search-items-worker",
+    "mini_app_api",
+]
+
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.ruff]
-target-version = "py311"
+target-version = "py313"
 # Exclude a variety of commonly ignored directories.
 exclude = [
     ".bzr",
@@ -109,7 +114,7 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.13"
 warn_return_any = true
 warn_unused_configs = true
 exclude = [

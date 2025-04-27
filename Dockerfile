@@ -1,37 +1,29 @@
-ARG PYTHON_VERSION=3.11-slim-buster
+ARG PYTHON_VERSION=3.13.3-alpine
+ARG UV_VERSION=0.6.17
 
+FROM ghcr.io/astral-sh/uv:${UV_VERSION} as uv
 FROM python:${PYTHON_VERSION} as builder
-ARG POETRY_VERSION=1.8.5
-
-RUN pip install --upgrade pip && pip install poetry==${POETRY_VERSION}
-
-ENV POETRY_NO_INTERACTION=1 \
-    POETRY_VIRTUALENVS_IN_PROJECT=1 \
-    POETRY_VIRTUALENVS_CREATE=1 \
-    POETRY_CACHE_DIR=/tmp/poetry_cache
+COPY --from=uv /uv /uvx /bin/
 
 WORKDIR /app
 
-COPY pyproject.toml .
-COPY poetry.lock .
-RUN poetry install --without dev --no-root --no-directory && rm -rf ${POETRY_CACHE_DIR}
+COPY pyproject.toml uv.lock ./
+RUN uv sync --compile-bytecode --frozen --no-install-project --no-dev
 
 FROM python:${PYTHON_VERSION} as runtime
 
 ENV VIRTUAL_ENV=/app/.venv \
     PATH="/app/.venv/bin:$PATH"
-
-COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
-
-COPY bot ./app/bot
-COPY cs2-items-parser ./app/cs2-items-parser
-COPY price-worker ./app/price-worker
-COPY search-items-worker ./app/search-items-worker
-COPY mini_app_api ./app/mini_app_api
-
 ENV PYTHONBUFFERED 1
 ENV PYTHONOPTIMIZE 1
 ENV PYTHONPATH "${PYTHONPATH}:/app"
 ENV PATH "${PATH}:/usr/local/bin"
+
+COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+
+COPY bot ./app/bot
+COPY price_worker ./app/price_worker
+COPY search_items_worker ./app/search_items_worker
+COPY mini_app_api ./app/mini_app_api
 
 ENTRYPOINT ["python", "-m", "bot.main" ]
