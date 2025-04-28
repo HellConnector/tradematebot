@@ -1,7 +1,9 @@
 import datetime as dt
 import gc
+import os
 from warnings import filterwarnings
 
+from dotenv import load_dotenv
 from sqlalchemy import select, func, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from telegram import (
@@ -25,11 +27,9 @@ from telegram.warnings import PTBUserWarning
 
 from bot import (
     constants,
-    deals,
     menu,
     messages,
     notifications,
-    parsers,
     settings,
     utils,
 )
@@ -44,6 +44,10 @@ from bot.logger import log
 filterwarnings(
     action="ignore", message=r".*CallbackQueryHandler", category=PTBUserWarning
 )
+
+load_dotenv()
+
+ENVIRONMENT = os.getenv("ENVIRONMENT")
 
 
 @utils.inject_db_session_and_client
@@ -256,33 +260,16 @@ def run():
         .build()
     )
 
-    job: JobQueue = bot.job_queue
-    job.run_repeating(
-        send_notifications,
-        interval=3600,
-    )
-
-    job.run_daily(update_price_limits, time=dt.time(hour=3, minute=33))
-    job.run_once(update_price_limits, when=0)
-    job.run_repeating(update_tracking_records, interval=3600, first=15)
-
-    pattern_func = [
-        (utils.w_pattern, parsers.parse_weapon_text),
-        (utils.g_pattern, parsers.parse_glove_text),
-        (utils.c_pattern, parsers.parse_container_text),
-        (utils.k_pattern, parsers.parse_knife_text),
-        (utils.a_pattern, parsers.parse_agent_text),
-        (utils.s_pattern, parsers.parse_sticker_text),
-        (utils.p_pattern, parsers.parse_patch_text),
-        (utils.t_pattern, parsers.parse_tool_text),
-    ]
-
-    skin_handlers = (
-        MessageHandler(
-            filters.Regex(pattern), deals.get_item_function(pattern, function)
+    if ENVIRONMENT == "production":
+        job: JobQueue = bot.job_queue
+        job.run_repeating(
+            send_notifications,
+            interval=3600,
         )
-        for pattern, function in pattern_func
-    )
+
+        job.run_daily(update_price_limits, time=dt.time(hour=3, minute=33))
+        job.run_once(update_price_limits, when=0)
+        job.run_repeating(update_tracking_records, interval=3600, first=15)
 
     menu_handler = CommandHandler("menu", main_menu)
 
@@ -304,24 +291,6 @@ def run():
                 CallbackQueryHandler(menu.deals, pattern=r"^Deals$"),
                 CallbackQueryHandler(
                     menu.notifications, pattern=r"^Notifications$"
-                ),
-            ],
-            utils.State.DEALS: [
-                CallbackQueryHandler(
-                    deals.set_deal_type, pattern=r"^(Buy|Sell)$"
-                )
-            ],
-            utils.State.ITEMS: [
-                *skin_handlers,
-                MessageHandler(
-                    filters.Regex(utils.selected_item_pattern),
-                    deals.selected_item,
-                ),
-                MessageHandler(
-                    filters.Regex(utils.cp_pattern), deals.item_count_price
-                ),
-                MessageHandler(
-                    filters.Regex(r"(?!menu\b)\b\w+"), deals.unknown_query
                 ),
             ],
             utils.State.NOTIFICATIONS: [

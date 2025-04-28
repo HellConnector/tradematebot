@@ -93,6 +93,11 @@ menu_message = {
     "Enter /help if you want to know more about bot's features or need help.",
 }
 
+deals_message = {
+    RU: "Используй мини-приложение для добавления сделки (кнопка `Portfolio`).",
+    EN: "Use mini app to add a deal (`Portfolio` button).",
+}
+
 sort_key_message = {
     RU: "Выберите параметр прибыли для сортировки:\n`%` ⇒ по процентам\n"
     "`Value` ⇒ по абсолютной величине",

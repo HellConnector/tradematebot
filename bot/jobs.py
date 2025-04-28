@@ -1,3 +1,5 @@
+import gc
+
 from sqlalchemy import select
 from telegram import ReplyKeyboardRemove
 from telegram.ext import ContextTypes
@@ -57,7 +59,7 @@ async def send_notifications(context: ContextTypes.DEFAULT_TYPE):
                 for i in filter(lambda x: x[0] == chat_id, take_profit_data)
             ]
             items_str = "\n".join(
-                f"{i + 1}) `{utils.get_short_name(d[1])}`:\n`{d[2]} {d[0]}` ⇒ "
+                f"{i + 1}) `{utils.get_short_name(d[1])}`:\n`{round(d[2], 2)} {d[0]}` ⇒ "
                 f"`{round(d[3], 2)} {d[0]}`"
                 for i, d in enumerate(items_data)
             )
@@ -97,3 +99,5 @@ async def update_tracking_records(context: ContextTypes.DEFAULT_TYPE):
                     income=income,
                 )
             )
+
+    gc.collect()

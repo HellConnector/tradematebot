@@ -24,9 +24,8 @@ from bot.logger import log
 
 class State(Enum):
     MAIN_MENU = 0
-    DEALS = 1
-    ITEMS = 2
-    NOTIFICATIONS = 3
+    ITEMS = 1
+    NOTIFICATIONS = 2
 
 
 ALLOWED_USERS_STATUS = (
@@ -42,16 +41,6 @@ def get_pattern(regex: str) -> re.Pattern:
 
 items_per_page = 8
 
-w_pattern = get_pattern(r"^w\s+[\w\W]+\s+(fn|mw|ft|ww|bs){1}\s*(st|sv)?")
-g_pattern = get_pattern(r"^g [\w\W ]+ (fn|mw|ft|ww|bs){1} *$")
-c_pattern = get_pattern(r"^c +[\w\W ]+")
-k_pattern = get_pattern(r"^k +[\w\W]+ *(fn|mw|ft|ww|bs)? *(st)? *")
-s_pattern = get_pattern(r"^s +[\w\W ]+ *$")
-p_pattern = get_pattern(r"^p +[\w\W ]+ *$")
-a_pattern = get_pattern(r"^a\s+(t|ct)?\s*[\w\W]+")
-t_pattern = get_pattern(r"^t +[\w\W ]+")
-selected_item_pattern = get_pattern(r"^\d+$")
-cp_pattern = get_pattern(r"^\d+\s+\d*(\.|\,)?\d{0,3}")
 notify_pattern = get_pattern(r"^\d*(\.|\,)?\d{0,3}$")
 
 
@@ -261,3 +250,4 @@ async def update_price_limits() -> dict | None:
                 limits_to_return["price_limits"][currency] = value
         log.info("Price limits update is completed")
         return limits_to_return
+    return None

@@ -1,3 +1,5 @@
+import gc
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from telegram import Update, User
 from telegram.ext import ContextTypes
@@ -14,13 +16,14 @@ async def deals(
     session: AsyncSession,
     client: Client,
 ):
-    query = update.callback_query
-    await query.edit_message_text(
-        messages.deal_type_message[client.lang],
-        reply_markup=utils.get_inline_markup(constants.DEAL_TYPES),
+    await user.send_message(
+        messages.deals_message[client.lang],
+        reply_markup=utils.get_main_menu_inline_markup(),
     )
     context.user_data.clear()
-    return utils.State.DEALS
+    gc.collect()
+
+    return utils.State.MAIN_MENU
 
 
 @utils.inject_db_session_and_client
