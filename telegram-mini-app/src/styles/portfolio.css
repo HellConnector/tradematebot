@@ -84,6 +84,62 @@
     color: var(--tg-theme-text-color)
 }
 
+.drawer-deals-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 4px
+}
+
+.drawer-stats-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: var(--tg-font-size-sm);
+    border-radius: var(--tg-border-radius);
+    overflow: hidden;
+    border: 1px solid var(--tg-theme-secondary-bg-color);
+}
+
+.drawer-stats-table th {
+    background-color: var(--tg-theme-secondary-bg-color);
+    color: var(--tg-theme-hint-color);
+    text-align: left;
+    padding: 8px;
+    font-weight: 500;
+    border-bottom: 1px solid var(--tg-theme-secondary-bg-color);
+}
+
+.drawer-stats-table td {
+    padding: 8px;
+    border-bottom: 1px solid var(--tg-theme-secondary-bg-color);
+    border-top: none;
+}
+
+.drawer-stats-table .buy-row td:first-child {
+    color: var(--tg-color-positive);
+    font-weight: 500;
+}
+
+.drawer-stats-table .sell-row td:first-child {
+    color: var(--tg-color-negative);
+    font-weight: 500;
+}
+
+.drawer-stats-table .sell-row td {
+    border-bottom: none;
+}
+
+.drawer-overall-profit {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    background-color: var(--tg-theme-secondary-bg-color);
+    border-radius: var(--tg-border-radius);
+    margin-top: 2px;
+}
+
 .drawer-deals-list {
     display: flex;
     flex-direction: column;

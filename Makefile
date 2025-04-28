@@ -21,19 +21,19 @@ upload_image:
 
 .PHONY: run_bot
 run_bot:
-	poetry run bot
+	uv run bot
 
 .PHONY: run_price_worker
 run_price_worker:
-	poetry run price-worker
+	uv run price-worker
 
-.PHONY: run_items2db_worker
-run_items2db_worker:
-	poetry run items2db-worker
+.PHONY: run_search_items_rowker
+run_search_items_worker:
+	uv run search-items-worker
 
 .PHONY: run_mini_app_api
 run_mini_app_api:
-	poetry run mini-app-api
+	uv run mini-app-api
 
 .PHONY: clean
 clean:

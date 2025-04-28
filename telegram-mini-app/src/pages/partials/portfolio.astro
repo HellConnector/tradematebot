@@ -60,7 +60,7 @@ if (error) {
               <div
                 class={`summary-value ${portfolioSummary.profit >= 0 ? "profit-positive" : "profit-negative"}`}
               >
-                {(portfolioSummary.profit >= 0 ? "+" : "-") +
+                {(portfolioSummary.profit >= 0 ? "+" : "") +
                   portfolioSummary.profit.toFixed(2) +
                   " " +
                   portfolioSummary.items[0].currency}

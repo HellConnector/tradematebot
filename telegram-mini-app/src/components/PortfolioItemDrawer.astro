@@ -27,11 +27,9 @@ const { item } = Astro.props;
   <div class="drawer-item-header">
     <h2 class="drawer-item-title">{item.name}</h2>
   </div>
-
   <div class="drawer-item-image-container">
     <img class="drawer-item-image" src={item.imageUrl} alt={item.name} />
   </div>
-
   <div class="drawer-item-info">
     <div class="drawer-item-section">
       <h3 class="drawer-section-title">Item Information</h3>
@@ -80,7 +78,6 @@ const { item } = Astro.props;
         >
       </div>
     </div>
-
     <div class="drawer-item-section">
       <h3 class="drawer-section-title">Profit Information</h3>
       <div class="drawer-item-detail">
@@ -102,7 +99,100 @@ const { item } = Astro.props;
         </span>
       </div>
     </div>
+    {
+      item.deals &&
+        item.deals.length > 0 &&
+        item.deals.some((deal) => deal.dealType === "Sell") && (
+          <div class="drawer-item-section">
+            <h3 class="drawer-section-title">Deals Statistics</h3>
+            <div class="drawer-deals-stats">
+              {(() => {
+                const buyDeals = item.deals.filter(
+                  (deal) => deal.dealType === "Buy",
+                );
+                const sellDeals = item.deals.filter(
+                  (deal) => deal.dealType === "Sell",
+                );
 
+                const totalBuyQuantity = buyDeals.reduce(
+                  (sum, deal) => sum + deal.volume,
+                  0,
+                );
+                const totalBuyAmount = buyDeals.reduce(
+                  (sum, deal) => sum + deal.price * deal.volume,
+                  0,
+                );
+                const avgBuyPrice =
+                  totalBuyQuantity > 0 ? totalBuyAmount / totalBuyQuantity : 0;
+
+                const totalSellQuantity = sellDeals.reduce(
+                  (sum, deal) => sum + deal.volume,
+                  0,
+                );
+                const totalSellAmount = sellDeals.reduce(
+                  (sum, deal) => sum + deal.price * deal.volume,
+                  0,
+                );
+                const avgSellPrice =
+                  totalSellQuantity > 0
+                    ? totalSellAmount / totalSellQuantity
+                    : 0;
+
+                const overallProfit = totalSellAmount - totalBuyAmount;
+
+                return (
+                  <>
+                    <table class="drawer-stats-table">
+                      <thead>
+                        <tr>
+                          <th>Deal Type</th>
+                          <th>Quantity</th>
+                          <th>Avg. Price</th>
+                          <th>Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr class="buy-row">
+                          <td>Buy</td>
+                          <td>{totalBuyQuantity}</td>
+                          <td>
+                            {avgBuyPrice.toFixed(2)} {item.currency}
+                          </td>
+                          <td>
+                            {totalBuyAmount.toFixed(2)} {item.currency}
+                          </td>
+                        </tr>
+                        <tr class="sell-row">
+                          <td>Sell</td>
+                          <td>{totalSellQuantity}</td>
+                          <td>
+                            {avgSellPrice.toFixed(2)} {item.currency}
+                          </td>
+                          <td>
+                            {totalSellAmount.toFixed(2)} {item.currency}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <div class="drawer-overall-profit">
+                      <span class="drawer-detail-label">
+                        Current Item Profit:
+                      </span>
+                      <span
+                        class={`drawer-detail-value ${overallProfit >= 0 ? "profit-positive" : "profit-negative"}`}
+                      >
+                        {(overallProfit >= 0 ? "+" : "") +
+                          overallProfit.toFixed(2)}{" "}
+                        {item.currency}
+                      </span>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+        )
+    }
     {
       item.deals && item.deals.length > 0 && (
         <div class="drawer-item-section">

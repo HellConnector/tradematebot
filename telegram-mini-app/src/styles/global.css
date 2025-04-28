@@ -1,11 +1,4 @@
 :root {
-    --tg-theme-bg-color: #fff;
-    --tg-theme-text-color: #000;
-    --tg-theme-hint-color: #999;
-    --tg-theme-link-color: #2481cc;
-    --tg-theme-button-color: #2481cc;
-    --tg-theme-button-text-color: #fff;
-    --tg-theme-secondary-bg-color: #f0f0f0;
     --tg-theme-bg-color: var(--telegram-bg-color, #fff);
     --tg-theme-text-color: var(--telegram-text-color, #000);
     --tg-theme-hint-color: var(--telegram-hint-color, #999);
@@ -126,7 +119,6 @@ main {
     flex: 1;
     flex-direction: column;
     gap: var(--tg-spacing-md);
-    /*padding-bottom: 60px*/
 }
 
 .htmx-indicator {
