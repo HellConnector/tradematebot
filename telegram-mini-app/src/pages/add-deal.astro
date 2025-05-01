@@ -35,7 +35,7 @@ if (Astro.request.method === "POST") {
       return new Response(null, {
         status: 200,
         headers: {
-          "HX-Redirect": `/portfolio/?name=${data.get("itemName")}`,
+          "HX-Redirect": `/portfolio/?name=${encodeURIComponent(data.get("itemName"))}`,
         },
       });
     } else {
