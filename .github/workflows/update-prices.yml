@@ -6,6 +6,9 @@ on:
   schedule:
     - cron: "5/30 * * * *"
 
+permissions:
+  contents: read
+
 jobs:
   update-prices:
     strategy:

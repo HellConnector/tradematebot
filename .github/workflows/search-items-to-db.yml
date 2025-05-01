@@ -3,6 +3,9 @@ name: Update search items
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   update-items:
     runs-on: ubuntu-latest
