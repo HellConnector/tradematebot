@@ -42,8 +42,14 @@ if (Astro.request.method === "POST") {
       showError = true;
       try {
         const responseData = await response.json();
-        errorMessage =
-          responseData.detail || "Failed to add deal. Please try again.";
+        errorMessage = responseData.detail
+          ? responseData.detail
+              .map((detail) => {
+                const parts = detail.msg.split(",");
+                return parts[1] ? parts[1].trim() : detail.msg;
+              })
+              .join(".\n")
+          : "Failed to add deal. Please try again.";
       } catch (e) {
         errorMessage = "Failed to add deal. Please try again.";
       }
@@ -77,6 +83,7 @@ if (Astro.request.method === "POST") {
         setTimeout(showErrorInTelegramPopup, 100);
       }
     }
+
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", showErrorInTelegramPopup);
     } else {

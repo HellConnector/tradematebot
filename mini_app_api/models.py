@@ -161,13 +161,13 @@ class DealCreate(BaseModel):
         if value < 0.01:
             raise ValueError("Price cannot be negative or too small")
         if value > 1_000_000:
-            raise ValueError("Price cannot be greater than 1 000 000")
+            raise ValueError("Price cannot be greater than 1000000")
         return value
 
     @field_validator("deal_volume")
     def validate_volume(cls, value):
         if value <= 0:
             raise ValueError("Volume cannot be negative or zero")
-        if value >= 1000:
+        if value > 1000:
             raise ValueError("Volume cannot be greater than 1000")
         return value
