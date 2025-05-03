@@ -84,6 +84,14 @@
     color: var(--tg-theme-text-color)
 }
 
+.steam-market-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--tg-theme-link-color);
+    padding: 6px;
+}
+
 .drawer-deals-stats {
     display: flex;
     flex-direction: column;
