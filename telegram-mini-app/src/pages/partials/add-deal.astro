@@ -328,7 +328,6 @@ if (name && authorization) {
     clearButton.addEventListener("click", () => {
       searchInput.value = "";
       clearButton.style.display = "none";
-      // Trigger the search to clear results
       searchInput.dispatchEvent(new Event("input"));
     });
   }

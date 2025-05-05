@@ -29,8 +29,6 @@ const {
       hx-get=`/partials/portfolio-item/${encodeURIComponent(name)}`
       hx-target="#item-details-container"
       hx-trigger="click"
-      hx-indicator="#drawer-skeleton"
-      hx-swap="transition:false"
       hx-on:click="showDrawer()"
       class="clickable-item-name"
     >
@@ -103,7 +101,6 @@ const {
 
       document.body.dataset.scrollY = scrollY;
 
-      drawer?.classList.add("open");
       document.getElementById("overlay")?.classList.add("active");
       if (window.app.isVerticalSwipesEnabled) {
         window.app.disableVerticalSwipes();
@@ -117,7 +114,6 @@ const {
   };
 
   window.hideDrawer = function () {
-    // Blur any active input elements to close the mobile keyboard
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
@@ -138,11 +134,5 @@ const {
     if (!window.app.isVerticalSwipesEnabled) {
       window.app.enableVerticalSwipes();
     }
-
-    window.app.MainButton.offClick();
-    window.app.MainButton.setText("Add deal");
-    window.app.MainButton.onClick(() => {
-      window.location.href = "/add-deal/";
-    });
   };
 </script>

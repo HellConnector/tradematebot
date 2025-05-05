@@ -1,7 +1,6 @@
 ---
 import { catchError } from "../../utils";
 import PortfolioItem from "../../components/PortfolioItem.astro";
-import PortfolioItemDrawerSkeleton from "../../components/PortfolioItemDrawerSkeleton.astro";
 
 export const partial = true;
 const authorization = Astro.request.headers.get("Authorization");
@@ -173,11 +172,13 @@ if (error) {
             );
           })}
         </div>
-        <div id="overlay" class="overlay" onclick="handleOverlayClick()" />
+        <div id="overlay" class="overlay" onclick="handleOverlayClick();" />
+        <div id="center-spinner" class="center-spinner">
+          <div class="spinner" />
+        </div>
         <div id="drawer" class="bottom-drawer">
-          <div class="drawer-handle" onclick="hideDrawer()" />
+          <div class="drawer-handle" onclick="hideDrawer();" />
           <div id="drawer-content">
-            <PortfolioItemDrawerSkeleton />
             <div id="item-details-container" />
           </div>
         </div>
@@ -365,4 +366,53 @@ if (error) {
       window.hideDrawer();
     }
   };
+
+  document.body.addEventListener("htmx:beforeRequest", function (evt) {
+    if (evt.detail.target.id === "item-details-container") {
+      evt.detail.target.innerHTML = "";
+      document.getElementById("center-spinner")?.classList.add("active");
+    }
+  });
+
+  function resetDrawerState() {
+    document.getElementById("overlay")?.classList.remove("active");
+    document.getElementById("center-spinner")?.classList.remove("active");
+    if (window.app.isVerticalSwipesEnabled === false) {
+      window.app.enableVerticalSwipes();
+    }
+    const scrollY = document.body.dataset.scrollY;
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.width = "";
+    window.scrollTo(0, parseInt(scrollY || "0"));
+  }
+
+  document.body.addEventListener("htmx:afterRequest", function (evt) {
+    if (evt.detail.target.id === "item-details-container") {
+      document.getElementById("center-spinner")?.classList.remove("active");
+      const drawer = document.getElementById("drawer");
+      if (drawer && !drawer.classList.contains("open")) {
+        if (
+          evt.detail.successful &&
+          evt.detail.target.innerHTML.trim() !== ""
+        ) {
+          drawer.classList.add("open");
+        } else {
+          resetDrawerState();
+        }
+      }
+    }
+  });
+
+  document.body.addEventListener("htmx:timeout", function (evt) {
+    if (evt.detail.target.id === "item-details-container") {
+      resetDrawerState();
+    }
+  });
+
+  document.body.addEventListener("htmx:abort", function (evt) {
+    if (evt.detail.target.id === "item-details-container") {
+      resetDrawerState();
+    }
+  });
 </script>

@@ -19,6 +19,10 @@ if (Astro.request.method === "POST") {
     if (!authorization) {
       return Astro.redirect("/outside-telegram/");
     }
+    const name = data.get("itemName");
+    if (name) {
+      queryString = `?name=${encodeURIComponent(name)}`;
+    }
     const [error, response] = await catchError(
       fetch(`${env.MINI_APP_API_URL}/portfolio/create-deal/`, {
         headers: {
