@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /add-deal
+Disallow: /history
+Disallow: /outside-telegram
+Disallow: /portfolio
+Disallow: /stats
+Disallow: /partials/
+
+# Allow only the main page to be indexed
+Sitemap: https://tradematebot.app/sitemap.xml
