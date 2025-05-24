@@ -1,24 +1,35 @@
 ---
 interface Props {
-  name: string;
-  count: number;
+  itemName: string;
   imageUrl: string;
-  buyPrice: number;
-  currentPrice: number;
+  holdDays: number;
+  leftCount: number;
+  buyCount: number;
+  avgBuyPrice: number;
+  spentByItem: number;
+  sellCount: number;
+  avgSellPrice: number;
+  earnedByItem: number;
+  incomeAbs: number;
+  incomePrc: number;
   currency: string;
-  incomePercentage: number;
-  incomeAmount: number;
   style?: string;
 }
+
 const {
-  name,
-  count,
+  itemName,
   imageUrl,
-  buyPrice,
-  currentPrice,
+  holdDays,
+  leftCount,
+  buyCount,
+  avgBuyPrice,
+  spentByItem,
+  sellCount,
+  avgSellPrice,
+  earnedByItem,
+  incomeAbs,
+  incomePrc,
   currency,
-  incomePercentage,
-  incomeAmount,
   style = "",
 } = Astro.props;
 ---
@@ -26,52 +37,58 @@ const {
 <div class="portfolio-item" style={style}>
   <div class="item-header">
     <h3
-      hx-get=`/partials/portfolio-item/${encodeURIComponent(name)}`
+      hx-get=`/partials/portfolio-item/${encodeURIComponent(itemName)}`
       hx-target="#item-details-container"
       hx-trigger="click"
       hx-on:click="showDrawer()"
       class="clickable-item-name"
     >
-      {name}
+      {itemName}
     </h3>
     <div
-      class={`item-quantity-badge ${count < 10 ? "single-digit" : ""}`}
-      data-value={count}
+      class={`item-quantity-badge ${leftCount < 10 ? "single-digit" : ""}`}
+      data-value={leftCount}
     >
-      {count}
+      {leftCount}
     </div>
   </div>
   <div class="item-details">
     <div class="item-image-container">
-      <img class="item-image" src={imageUrl} alt={name} />
+      <img class="item-image" src={imageUrl} alt={itemName} />
     </div>
     <div class="item-price-info">
       <div class="item-detail">
         <span class="detail-label">Buy Price:</span>
-        <span class="detail-value">{buyPrice} {currency}</span>
+        <span class="detail-value"
+          >{avgBuyPrice}
+          {currency}<span class="drawer-deal-volume">x{buyCount}</span></span
+        >
       </div>
       <div class="item-detail">
-        <span class="detail-label">Current Price:</span>
-        <span class="detail-value">{currentPrice} {currency}</span>
+        <span class="detail-label">Sell Price:</span>
+        <span class="detail-value"
+          >{avgSellPrice}
+          {currency}<span class="drawer-deal-volume">x{sellCount}</span></span
+        >
       </div>
     </div>
     <div class="item-profit-info">
       <div class="item-detail">
         <span class="detail-label">Profit %:</span>
         <span
-          class={`detail-value income-percentage ${incomePercentage >= 0 ? "profit-positive" : "profit-negative"}`}
-          data-value={incomePercentage}
+          class={`detail-value income-percentage ${incomePrc >= 0 ? "profit-positive" : "profit-negative"}`}
+          data-value={incomePrc}
         >
-          {incomePercentage >= 0 ? "+" : ""}{incomePercentage}%
+          {incomePrc >= 0 ? "+" : ""}{incomePrc}%
         </span>
       </div>
       <div class="item-detail">
         <span class="detail-label">Profit:</span>
         <span
-          class={`detail-value income-amount ${incomeAmount >= 0 ? "profit-positive" : "profit-negative"}`}
-          data-value={incomeAmount}
+          class={`detail-value income-amount ${incomeAbs >= 0 ? "profit-positive" : "profit-negative"}`}
+          data-value={incomeAbs}
         >
-          {incomeAmount >= 0 ? "+" : ""}{incomeAmount}
+          {incomeAbs >= 0 ? "+" : ""}{incomeAbs}
           {currency}
         </span>
       </div>

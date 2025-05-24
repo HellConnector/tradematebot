@@ -12,14 +12,17 @@ from mini_app_api.data_loader import (
     get_existing_search_items,
     ALL_SEARCH_ITEMS,
 )
-from mini_app_api.routes import profile, search, portfolio
+from mini_app_api.routes import profile, search, portfolio, stats
 
 load_dotenv()
 
 SSL_KEY_PATH = os.getenv("SSL_KEY_PATH")
 SSL_CERT_PATH = os.getenv("SSL_CERT_PATH")
+ENVIRONMENT = os.getenv("ENVIRONMENT")
 
-sentry_sdk.init(dsn=os.getenv("SENTRY_DSN"), enable_tracing=True)
+sentry_sdk.init(
+    dsn=os.getenv("SENTRY_DSN"), enable_tracing=True, environment=ENVIRONMENT
+)
 
 
 @asynccontextmanager
@@ -48,6 +51,7 @@ app.add_middleware(
 app.include_router(profile.router)
 app.include_router(search.router)
 app.include_router(portfolio.router)
+app.include_router(stats.router)
 
 
 def run():

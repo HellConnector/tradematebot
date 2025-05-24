@@ -6,7 +6,6 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 import bot.settings as settings
 from .data_helper import (
     get_stats_data,
-    get_tracking_data,
     get_tracking_records,
     get_tracking_records_for_user,
 )

@@ -1,11 +1,12 @@
-from datetime import datetime, date
+from datetime import date, datetime
 
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from bot.db import get_async_session, SearchItem, Item, Deal, Price, Client
-from mini_app_api.models import PortfolioItem, ItemDeal
+from bot.db import Client, Deal, Item, Price, SearchItem, get_async_session
+from bot.db.data_helper import get_stats_data
+from mini_app_api.models import ItemDeal, PortfolioItem, StatsItem
 
 ALL_SEARCH_ITEMS = {}
 
@@ -95,6 +96,35 @@ async def get_portfolio_data(
     return deals
 
 
+async def get_stats_data_for_client(
+    client_id: int, currency: str, session: AsyncSession
+) -> list[StatsItem]:
+    stats_data = await get_stats_data(client_id, currency, session)
+
+    results = [
+        StatsItem(
+            item_name=item.item_name,
+            image_url=item.image_url,
+            hold_days=item.hold_days,
+            left_count=item.left_count,
+            buy_count=item.buy_count,
+            avg_buy_price=item.avg_buy_price,
+            spent_by_item=item.spent_by_item,
+            sell_count=item.sell_count,
+            avg_sell_price=item.avg_sell_price,
+            earned_by_item=item.earned_by_item,
+            income_abs=item.income_abs,
+            income_prc=item.income_prc,
+        )
+        for item in stats_data
+    ]
+
+    if results:
+        results.sort(key=lambda x: x.income_prc, reverse=True)
+
+    return results
+
+
 async def get_item_with_deals_by_name(
     client: Client, item_name: str
 ) -> PortfolioItem | None:
@@ -132,11 +162,23 @@ async def get_item_with_deals_by_name(
         else (current_price * 0.87 - buy_price) / buy_price * 100
     )
 
-    deal_dates = [datetime.date(d.date) for d in item.deals]
     current_date = datetime.strptime(
         date.today().isoformat(), "%Y-%m-%d"
     ).date()
-    delta_days = (current_date - min(deal_dates)).days
+
+    min_buy_deal_date = min(
+        datetime.date(d.date) for d in item.deals if d.deal_type == "buy"
+    )
+    max_sell_deal_date = max(
+        (datetime.date(d.date) for d in item.deals if d.deal_type == "sell"),
+        default=current_date,
+    )
+
+    delta_days = (
+        (current_date - min_buy_deal_date).days
+        if item.count > 0
+        else (max_sell_deal_date - min_buy_deal_date).days
+    )
 
     portfolio_item = PortfolioItem(
         name=item.name,

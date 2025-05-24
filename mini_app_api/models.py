@@ -143,6 +143,31 @@ class PortfolioSummary(BaseModel):
     items: list[PortfolioItem]
 
 
+class StatsItem(BaseModel):
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+    item_name: str
+    image_url: str
+    hold_days: int
+    left_count: int
+    buy_count: int
+    avg_buy_price: Float2
+    spent_by_item: Float2
+    sell_count: int
+    avg_sell_price: Float2
+    earned_by_item: Float2
+    income_abs: Float2
+    income_prc: Float2
+
+
+class StatsSummary(BaseModel):
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+    items: list[StatsItem]
+    total_spent: Float2
+    total_earned: Float2
+    total_profit: Float2
+    currency: CurrencyType
+
+
 class DealCreate(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
     item_name: str

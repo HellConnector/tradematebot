@@ -4,20 +4,20 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select, update
 from sqlalchemy.orm import selectinload
 
-from bot.db import get_async_session, Deal, Item, Price
+from bot.db import Deal, Item, Price, get_async_session
 from mini_app_api.data_loader import (
-    get_portfolio_data,
-    get_item_with_deals_by_name,
     ALL_SEARCH_ITEMS,
+    get_item_with_deals_by_name,
+    get_portfolio_data,
 )
 from mini_app_api.dependencies import (
     ClientDep,
     get_client,
 )
 from mini_app_api.models import (
+    DealCreate,
     PortfolioItem,
     PortfolioSummary,
-    DealCreate,
 )
 
 router = APIRouter(

@@ -26,23 +26,24 @@ const multisellURL = `https://steamcommunity.com/market/multisell?appid=730&cont
 
 function shouldShowMultisellButton(itemName: string): boolean {
   return (
-    itemName.startsWith("Sticker |") ||
-    itemName.endsWith("Case") ||
-    itemName.endsWith("Case 2") ||
-    itemName.endsWith("Case 3") ||
-    itemName.includes("Capsule") ||
-    itemName.endsWith("(Holo-Foil)") ||
-    itemName.startsWith("2020 RMR") ||
-    itemName.includes("Legends") ||
-    itemName.includes("Challengers") ||
-    itemName.includes("Contenders") ||
-    itemName.includes("Champions") ||
-    itemName.endsWith("Souvenir Package") ||
-    itemName.startsWith("Patch |") ||
-    itemName.startsWith("Charm |") ||
-    itemName.includes("Music Kit |") ||
-    itemName.startsWith("Sealed Graffiti") ||
-    itemName.endsWith("Pin")
+    item.count > 0 &&
+    (itemName.startsWith("Sticker |") ||
+      itemName.endsWith("Case") ||
+      itemName.endsWith("Case 2") ||
+      itemName.endsWith("Case 3") ||
+      itemName.includes("Capsule") ||
+      itemName.endsWith("(Holo-Foil)") ||
+      itemName.startsWith("2020 RMR") ||
+      itemName.includes("Legends") ||
+      itemName.includes("Challengers") ||
+      itemName.includes("Contenders") ||
+      itemName.includes("Champions") ||
+      itemName.endsWith("Souvenir Package") ||
+      itemName.startsWith("Patch |") ||
+      itemName.startsWith("Charm |") ||
+      itemName.includes("Music Kit |") ||
+      itemName.startsWith("Sealed Graffiti") ||
+      itemName.endsWith("Pin"))
   );
 }
 
@@ -66,24 +67,45 @@ const showMultisellButton = shouldShowMultisellButton(item.name);
         <span class="drawer-detail-label">Hold Days:</span>
         <span class="drawer-detail-value">{item.deltaDays}</span>
       </div>
-      <div class="drawer-item-detail">
-        <span class="drawer-detail-label">Profit %:</span>
-        <span
-          class={`drawer-detail-value ${item.incomePercentage >= 0 ? "profit-positive" : "profit-negative"}`}
-        >
-          {item.incomePercentage >= 0 ? "+" : ""}{item.incomePercentage}%
-        </span>
-      </div>
-      <div class="drawer-item-detail">
-        <span class="drawer-detail-label">Profit:</span>
-        <span
-          class={`drawer-detail-value ${item.incomeAmount >= 0 ? "profit-positive" : "profit-negative"}`}
-        >
-          {item.incomeAmount >= 0 ? "+" : ""}{item.incomeAmount}{" "}{
-            item.currency
-          }
-        </span>
-      </div>
+      {
+        item.count > 0 ? (
+          <>
+            <div class="drawer-item-detail">
+              <span class="drawer-detail-label">Profit %:</span>
+              <span
+                class={`drawer-detail-value ${item.incomePercentage >= 0 ? "profit-positive" : "profit-negative"}`}
+              >
+                {item.incomePercentage >= 0 ? "+" : ""}
+                {item.incomePercentage}%
+              </span>
+            </div>
+            <div class="drawer-item-detail">
+              <span class="drawer-detail-label">Profit:</span>
+              <span
+                class={`drawer-detail-value ${item.incomeAmount >= 0 ? "profit-positive" : "profit-negative"}`}
+              >
+                {item.incomeAmount >= 0 ? "+" : ""}
+                {item.incomeAmount} {item.currency}
+              </span>
+            </div>
+          </>
+        ) : (
+          <>
+            <div class="drawer-item-detail">
+              <span class="drawer-detail-label">Buy Price:</span>
+              <span class="drawer-detail-value">
+                {item.buyPrice} {item.currency}
+              </span>
+            </div>
+            <div class="drawer-item-detail">
+              <span class="drawer-detail-label">Current Price:</span>
+              <span class="drawer-detail-value">
+                {item.currentPrice} {item.currency}
+              </span>
+            </div>
+          </>
+        )
+      }
     </div>
   </div>
   <div class="drawer-item-buttons">
@@ -110,41 +132,43 @@ const showMultisellButton = shouldShowMultisellButton(item.name);
       )
     }
   </div>
-  <div class="drawer-item-section">
-    <h3 class="drawer-section-title">Price Information</h3>
-    <div class="drawer-item-detail">
-      <span class="drawer-detail-label">Buy Price:</span>
-      <span class="drawer-detail-value"
-        >{item.buyPrice}{" "}{item.currency}</span
-      >
-    </div>
-    <div class="drawer-item-detail">
-      <span class="drawer-detail-label">Current Price:</span>
-      <span class="drawer-detail-value"
-        >{item.currentPrice}{" "}{item.currency}</span
-      >
-    </div>
-    <div class="drawer-item-detail">
-      <span class="drawer-detail-label">Total Investment:</span>
-      <span class="drawer-detail-value"
-        >{
-          item.buyPrice * item.count === 0
-            ? "0"
-            : (item.buyPrice * item.count).toFixed(2)
-        }{" "}{item.currency}</span
-      >
-    </div>
-    <div class="drawer-item-detail">
-      <span class="drawer-detail-label">Current Value:</span>
-      <span class="drawer-detail-value"
-        >{
-          item.currentPrice * item.count === 0
-            ? "0"
-            : (item.currentPrice * item.count).toFixed(2)
-        }{" "}{item.currency}</span
-      >
-    </div>
-  </div>
+  {
+    item.count > 0 && (
+      <div class="drawer-item-section">
+        <h3 class="drawer-section-title">Price Information</h3>
+        <div class="drawer-item-detail">
+          <span class="drawer-detail-label">Buy Price:</span>
+          <span class="drawer-detail-value">
+            {item.buyPrice} {item.currency}
+          </span>
+        </div>
+        <div class="drawer-item-detail">
+          <span class="drawer-detail-label">Current Price:</span>
+          <span class="drawer-detail-value">
+            {item.currentPrice} {item.currency}
+          </span>
+        </div>
+        <div class="drawer-item-detail">
+          <span class="drawer-detail-label">Total Investment:</span>
+          <span class="drawer-detail-value">
+            {item.buyPrice * item.count === 0
+              ? "0"
+              : (item.buyPrice * item.count).toFixed(2)}{" "}
+            {item.currency}
+          </span>
+        </div>
+        <div class="drawer-item-detail">
+          <span class="drawer-detail-label">Current Value:</span>
+          <span class="drawer-detail-value">
+            {item.currentPrice * item.count === 0
+              ? "0"
+              : (item.currentPrice * item.count).toFixed(2)}{" "}
+            {item.currency}
+          </span>
+        </div>
+      </div>
+    )
+  }
   {
     item.deals &&
       item.deals.length > 0 &&
@@ -220,7 +244,7 @@ const showMultisellButton = shouldShowMultisellButton(item.name);
                   </table>
                   <div class="drawer-overall-profit">
                     <span class="drawer-detail-label">
-                      Current Item Profit:
+                      {item.count > 0 ? "Current" : "Total"} Item Profit:
                     </span>
                     <span
                       class={`drawer-detail-value ${overallProfit >= 0 ? "profit-positive" : "profit-negative"}`}

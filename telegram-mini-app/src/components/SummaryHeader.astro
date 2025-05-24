@@ -7,6 +7,7 @@ interface Props {
   nameFilter?: string;
   showSearch?: boolean;
   showSortButtons?: boolean;
+  isStatsPage?: boolean;
 }
 
 const {
@@ -17,6 +18,7 @@ const {
   nameFilter = "",
   showSearch = true,
   showSortButtons = true,
+  isStatsPage = false,
 } = Astro.props;
 ---
 
@@ -30,14 +32,14 @@ const {
       </div>
     </div>
     <div class="summary-item">
-      <div class="summary-label">Current</div>
+      <div class="summary-label">{isStatsPage ? "Earned" : "Current"}</div>
       <div class="summary-value">
         {currentValue.toFixed(2)}
         {currency}
       </div>
     </div>
     <div class="summary-item">
-      <div class="summary-label">Profit</div>
+      <div class="summary-label">{isStatsPage ? "Income" : "Profit"}</div>
       <div
         class={`summary-value ${profit >= 0 ? "profit-positive" : "profit-negative"}`}
       >
@@ -194,8 +196,14 @@ const {
     );
     const sortValueButton = document.getElementById("sort-value-button");
     const sortCountButton = document.getElementById("sort-count-button");
-    const portfolioItems = document.querySelectorAll(".portfolio-item");
+
     const portfolioItemsContainer = document.querySelector(".portfolio-items");
+    const statsItemsContainer = document.querySelector(".stats-items");
+    const itemsContainer = portfolioItemsContainer || statsItemsContainer;
+
+    const portfolioItems = itemsContainer
+      ? itemsContainer.querySelectorAll(".portfolio-item")
+      : [];
 
     let currentSortBy = "percentage";
     let isAscending = false;
@@ -218,7 +226,7 @@ const {
         return ascending ? valueA - valueB : valueB - valueA;
       });
 
-      itemsArray.forEach((item) => portfolioItemsContainer?.appendChild(item));
+      itemsArray.forEach((item) => itemsContainer?.appendChild(item));
     }
 
     function updateActiveSortButton(sortBy) {
@@ -264,7 +272,6 @@ const {
     });
   };
 
-  // Initialize filter and sort if they exist on the page
   if (document.getElementById("portfolio-search")) {
     window.initializeFilter();
   }

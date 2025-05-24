@@ -12,8 +12,6 @@ if (!authorization) {
   return Astro.redirect("/outside-telegram/");
 }
 
-const nameFilter = Astro.url.searchParams.get("name") || "";
-
 const [error, response] = await catchError(
   fetch(`${env.MINI_APP_API_URL}/portfolio/`, {
     headers: {
@@ -32,6 +30,16 @@ if (error) {
   } catch (e) {
     console.error("Failed to parse portfolio data:", e);
   }
+}
+
+let nameFilter = Astro.url.searchParams.get("name") || "";
+
+if (portfolioSummary && portfolioSummary.items) {
+  nameFilter = portfolioSummary.items
+    .map((item) => item.name)
+    .includes(nameFilter)
+    ? nameFilter
+    : "";
 }
 ---
 
@@ -107,18 +115,16 @@ if (error) {
 </div>
 
 <script>
-  window.app.BackButton.hide();
-
   window.app.MainButton.setText("Add deal");
   window.app.MainButton.onClick(() => {
     const drawer = document.getElementById("drawer");
     const itemName = drawer?.classList.contains("open")
       ? drawer.querySelector("h2[class='drawer-item-title']")?.textContent
       : null;
-
-    window.location.href = itemName
+    const urlPath = itemName
       ? `/add-deal/?name=${encodeURIComponent(itemName)}`
       : "/add-deal/";
+    window.historyManager.goToUrl(urlPath);
   });
   window.app.MainButton.color = "rgb(49, 181, 69)";
   window.app.MainButton.show();

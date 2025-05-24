@@ -1,14 +1,195 @@
 ---
+import { catchError } from "../../utils";
+import StatsItem from "../../components/StatsItem.astro";
+import SummaryHeader from "../../components/SummaryHeader.astro";
+
 export const partial = true;
 const authorization = Astro.request.headers.get("Authorization");
+
+const { env } = Astro.locals.runtime;
 
 if (!authorization) {
   return Astro.redirect("/outside-telegram/");
 }
+
+const nameFilter = Astro.url.searchParams.get("name") || "";
+
+const [error, response] = await catchError(
+  fetch(`${env.MINI_APP_API_URL}/stats/`, {
+    headers: {
+      Authorization: authorization,
+    },
+  }),
+);
+
+let statsSummary = null;
+
+if (error) {
+  console.error("Error fetching stats:", error);
+} else if (response.ok) {
+  try {
+    statsSummary = await response.json();
+  } catch (e) {
+    console.error("Failed to parse stats data:", e);
+  }
+}
 ---
 
 <div class="stats-container">
-  <div class="under-development-message">
-    <p>This page is under development. Check back soon!</p>
+  {
+    statsSummary && statsSummary.items.length > 0 ? (
+      <>
+        <SummaryHeader
+          spentValue={statsSummary.totalSpent}
+          currentValue={statsSummary.totalEarned}
+          profit={statsSummary.totalProfit}
+          currency={statsSummary.currency}
+          nameFilter={nameFilter}
+          showSearch={true}
+          showSortButtons={true}
+          isStatsPage={true}
+        />
+        <div class="stats-items">
+          {statsSummary.items.map((item) => {
+            const shouldHide = nameFilter && !(item.itemName === nameFilter);
+            return (
+              <StatsItem
+                itemName={item.itemName}
+                imageUrl={item.imageUrl}
+                holdDays={item.holdDays}
+                leftCount={item.leftCount}
+                buyCount={item.buyCount}
+                avgBuyPrice={item.avgBuyPrice}
+                spentByItem={item.spentByItem}
+                sellCount={item.sellCount}
+                avgSellPrice={item.avgSellPrice}
+                earnedByItem={item.earnedByItem}
+                incomeAbs={item.incomeAbs}
+                incomePrc={item.incomePrc}
+                currency={statsSummary.currency}
+                style={shouldHide ? "display: none;" : ""}
+              />
+            );
+          })}
+        </div>
+      </>
+    ) : (
+      <>
+        <div class="empty-portfolio">
+          <p>
+            Statistics are not available. To view it, you must have 'buy' and
+            'sell' deals.
+          </p>
+        </div>
+      </>
+    )
+  }
+</div>
+
+<div id="overlay" class="overlay" onclick="handleOverlayClick();"></div>
+<div id="center-spinner" class="center-spinner">
+  <div class="spinner"></div>
+</div>
+<div id="drawer" class="bottom-drawer">
+  <div class="drawer-handle" onclick="hideDrawer();"></div>
+  <div id="drawer-content">
+    <div id="item-details-container"></div>
   </div>
 </div>
+
+<script>
+  window.app.MainButton.setText("Add deal");
+  window.app.MainButton.onClick(() => {
+    const drawer = document.getElementById("drawer");
+    const itemName = drawer?.classList.contains("open")
+      ? drawer.querySelector("h2[class='drawer-item-title']")?.textContent
+      : null;
+    const urlPath = itemName
+      ? `/add-deal/?name=${encodeURIComponent(itemName)}`
+      : "/add-deal/";
+
+    window.historyManager.goToUrl(urlPath);
+  });
+  window.app.MainButton.color = "rgb(49, 181, 69)";
+  window.app.MainButton.show();
+
+  window.app.MainButton.hasShineEffect =
+    !!document.querySelector(".empty-portfolio");
+
+  window.handleOverlayClick = function () {
+    const isItemDetailsDrawerOpen = document
+      .getElementById("drawer")
+      ?.classList.contains("open");
+
+    if (isItemDetailsDrawerOpen) {
+      window.hideDrawer();
+    }
+  };
+
+  if (document.getElementById("portfolio-search")) {
+    window.initializeFilter();
+  }
+
+  if (document.getElementById("sort-percentage-button")) {
+    window.initializeSort();
+  }
+
+  window.handleOverlayClick = function () {
+    const isItemDetailsDrawerOpen = document
+      .getElementById("drawer")
+      ?.classList.contains("open");
+
+    if (isItemDetailsDrawerOpen) {
+      window.hideDrawer();
+    }
+  };
+
+  document.body.addEventListener("htmx:beforeRequest", function (evt) {
+    if (evt.detail.target.id === "item-details-container") {
+      evt.detail.target.innerHTML = "";
+      document.getElementById("center-spinner")?.classList.add("active");
+    }
+  });
+
+  function resetDrawerState() {
+    document.getElementById("overlay")?.classList.remove("active");
+    document.getElementById("center-spinner")?.classList.remove("active");
+    if (window.app.isVerticalSwipesEnabled === false) {
+      window.app.enableVerticalSwipes();
+    }
+    const scrollY = document.body.dataset.scrollY;
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.width = "";
+    window.scrollTo(0, parseInt(scrollY || "0"));
+  }
+
+  document.body.addEventListener("htmx:afterRequest", function (evt) {
+    if (evt.detail.target.id === "item-details-container") {
+      document.getElementById("center-spinner")?.classList.remove("active");
+      const drawer = document.getElementById("drawer");
+      if (drawer && !drawer.classList.contains("open")) {
+        if (
+          evt.detail.successful &&
+          evt.detail.target.innerHTML.trim() !== ""
+        ) {
+          drawer.classList.add("open");
+        } else {
+          resetDrawerState();
+        }
+      }
+    }
+  });
+
+  document.body.addEventListener("htmx:timeout", function (evt) {
+    if (evt.detail.target.id === "item-details-container") {
+      resetDrawerState();
+    }
+  });
+
+  document.body.addEventListener("htmx:abort", function (evt) {
+    if (evt.detail.target.id === "item-details-container") {
+      resetDrawerState();
+    }
+  });
+</script>

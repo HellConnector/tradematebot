@@ -77,4 +77,90 @@ document.addEventListener("click", function (event) {
   }
 });
 
+window.historyManager = {
+  STORAGE_KEY: "history",
+  history: [],
+  currentIndex: -1,
+
+  loadHistory: function () {
+    const data = sessionStorage.getItem(this.STORAGE_KEY);
+    if (data) {
+      const parsed = JSON.parse(data);
+      this.history = parsed.history || [];
+      this.currentIndex = parsed.currentIndex || -1;
+    }
+  },
+
+  saveHistory: function () {
+    const data = {
+      history: this.history,
+      currentIndex: this.currentIndex,
+    };
+    sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+  },
+
+  push: function (urlPath) {
+    this.history = this.history.slice(0, this.currentIndex + 1);
+    this.history.push(urlPath);
+    this.currentIndex = this.history.length - 1;
+    this.saveHistory();
+    this.updateBackButton();
+  },
+
+  back: function () {
+    if (this.canGoBack()) {
+      this.currentIndex--;
+      this.saveHistory();
+      this.updateBackButton();
+      return this.getCurrentPage();
+    }
+    return null;
+  },
+
+  canGoBack: function () {
+    return this.currentIndex > 0;
+  },
+
+  getCurrentPage: function () {
+    return this.history[this.currentIndex] || null;
+  },
+
+  updateBackButton: function () {
+    if (this.canGoBack()) {
+      app.BackButton.show();
+    } else {
+      app.BackButton.hide();
+    }
+  },
+
+  goToUrl: function (urlPath) {
+    this.push(urlPath);
+    window.location.href = urlPath;
+  },
+
+  init: function () {
+    this.loadHistory();
+    const currentUrlPath = window.location.pathname + window.location.search;
+
+    if (this.history.length === 0) {
+      this.push(currentUrlPath);
+    } else {
+      if (!(this.getCurrentPage() === currentUrlPath)) {
+        this.push(currentUrlPath);
+      }
+    }
+
+    this.updateBackButton();
+
+    app.onEvent("backButtonClicked", () => {
+      const previousPage = this.back();
+      if (previousPage) {
+        window.location.href = previousPage;
+      }
+    });
+  },
+};
+
+window.historyManager.init();
+
 console.log("Mini App initialized successfully with theme:", app.colorScheme);
