@@ -7,14 +7,14 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from itertools import cycle, chain, islice
-from typing import Self, Iterator
+from itertools import chain, cycle, islice
+from typing import Iterator, Self
 
 import httpx
 from dotenv import load_dotenv
 from sqlalchemy import select
 
-from bot.db import get_async_session, Price, Item, Deal
+from bot.db import Deal, Item, Price, get_async_session
 
 load_dotenv()
 
@@ -169,7 +169,7 @@ async def get_items_from_db() -> Iterator[MarketItem]:
             Item.name.label("item_name"),
             Deal.deal_currency.label("currency"),
         )
-        .where(Item.id == Deal.item_id)
+        .where(Item.id == Deal.item_id, Item.count > 0, Deal.closed.is_(False))
         .group_by(Item.name, Deal.deal_currency)
         .order_by(Item.name)
     )
